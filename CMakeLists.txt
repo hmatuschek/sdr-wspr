@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.8.8)
 project(sdr-wspr)
+# required for original wspr code
+enable_language(Fortran)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 include(InstallHeadersWithDirectory)
@@ -9,6 +11,7 @@ find_package(Qt5Widgets REQUIRED)
 
 find_package(FFTW REQUIRED)
 find_package(FFTWSingle REQUIRED)
+find_package(FFTWF REQUIRED)
 find_package(PortAudio REQUIRED)
 find_package(RTLSDR REQUIRED)
 
@@ -46,7 +49,32 @@ set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG} -O0 -ggdb")
 set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG} -O0 -ggdb")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -ggdb")
 
+
+# FFLAGS depend on the compiler
+get_filename_component(Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
+
+if(Fortran_COMPILER_NAME MATCHES "gfortran.*")
+  # gfortran
+  set(CMAKE_Fortran_FLAGS_RELEASE "-funroll-all-loops -fno-f2c -O3")
+  set(CMAKE_Fortran_FLAGS_DEBUG   "-fno-f2c -O0 -g")
+elseif(Fortran_COMPILER_NAME MATCHES "ifort.*")
+  # ifort (untested)
+  set(CMAKE_Fortran_FLAGS_RELEASE "-f77rtl -O3")
+  set(CMAKE_Fortran_FLAGS_DEBUG   "-f77rtl -O0 -g")
+elseif(Fortran_COMPILER_NAME MATCHES "g77")
+  # g77
+  set(CMAKE_Fortran_FLAGS_RELEASE "-funroll-all-loops -fno-f2c -O3 -m32")
+  set(CMAKE_Fortran_FLAGS_DEBUG   "-fno-f2c -O0 -g -m32")
+else(Fortran_COMPILER_NAME MATCHES "gfortran.*")
+  message("CMAKE_Fortran_COMPILER full path: " ${CMAKE_Fortran_COMPILER})
+  message("Fortran compiler: " ${Fortran_COMPILER_NAME})
+  message("No optimized Fortran compiler flags are known, we just try -O2...")
+  set(CMAKE_Fortran_FLAGS_RELEASE "-O2")
+  set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -g")
+endif(Fortran_COMPILER_NAME MATCHES "gfortran.*")
+
 # RX sources...
+add_subdirectory(libwspr)
 add_subdirectory(src)
 # ... also compile libsdr if not found:
 IF(NOT LIBSDR_FOUND)
