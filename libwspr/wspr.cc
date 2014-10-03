@@ -17,6 +17,7 @@ sdr::wspr_decode(const Buffer<int16_t> &in, std::list<WSPRMessage> &msgs, double
 
   if (0 >= kz) { return; }
 
+  // For every candidate found
   for (int k=0; k<kz; k++)
   {
     float snrsync = sstf[5*k+0];
@@ -24,20 +25,23 @@ sdr::wspr_decode(const Buffer<int16_t> &in, std::list<WSPRMessage> &msgs, double
     float dtx     = sstf[5*k+2];
     float dfx     = sstf[5*k+3];
     float drift   = sstf[5*k+4];
-    float a[5] = { -dfx, -0.5*drift, 0.0, 0.0, 0.0 };
 
-    // Fix frequency drift, store result into sig
+    // Fix frequency drift, store result into c3
+    float a[5] = { -dfx, -0.5*drift, 0.0, 0.0, 0.0 };
     Buffer< std::complex<float> > c3(45000);
     int jz = 45000;
     twkfreq_(reinterpret_cast<std::complex<float> *>(c2.data()),
              reinterpret_cast<std::complex<float> *>(c3.data()), &jz, a);
+
     // Decode signal
     char message[22];
     for (size_t i=0; i<22; i++) { message[i] = 0; }
+
     int minsync = 1; int nsync = snrsync;
     if (nsync < 0) { nsync = 0; }
+
     float minsnr = -33; int nsnrx = snrx;
-    if (nsnrx<minsnr) { nsnrx = minsnr; }
+    if (nsnrx < minsnr) { nsnrx = minsnr; }
     if ((nsync < minsync) || (nsnrx < minsnr)) { continue; }
 
     float dt = 1./375;
@@ -50,8 +54,7 @@ sdr::wspr_decode(const Buffer<int16_t> &in, std::list<WSPRMessage> &msgs, double
       if (i1 >= 0) {
         for (int i=i1; i<jz; i++) { c4[i-i1] = c3[i]; }
       } else {
-        /// @BUG somewhere in here!!!
-        for (int i=0; i<(jz+i1-1); i++) { c4[i-i1+1] = c3[i]; }
+        for (int i=0; i<(jz+i1); i++) { c4[i+-i1+1] = c3[i]; }
       }
       int jz=45000, ncycles=0, nerr=0;
       int metric[512];
