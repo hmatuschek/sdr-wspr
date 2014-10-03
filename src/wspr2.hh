@@ -5,6 +5,8 @@
 #include "fftplan.hh"
 #include "freqshift.hh"
 #include "gui/spectrum.hh"
+#include "../libwspr/wspr.hh"
+
 
 namespace sdr {
 
@@ -40,12 +42,22 @@ public:
 
   virtual void process(const Buffer<int16_t> &buffer, bool allow_overwrite);
 
+  /** Adds a callback to the "messages received" signal. */
+  template <class T>
+  void addMsgReceived(T* instance, void (T::*function)()) {
+    _rx_evt.push_back(new Delegate<T>(instance, function));
+  }
+
+  inline std::list<WSPRMessage> &messages() { return _messages; }
+
+
 protected:
   /** Starts a new thread for the decoding. */
   void start_decode();
   /** Just a callback for the pthread API. */
   static void *_pthread_decode_func(void *ctx);
   void decode_signal();
+  void signalMessagesReceived();
 
 protected:
   FreqShiftBase<int16_t> _fshift;
@@ -71,6 +83,9 @@ protected:
   FFTPlan<float> _fft;
   /** The current PSD. */
   Buffer<double> _currPSD;
+  /** The list of the received messages. */
+  std::list<WSPRMessage> _messages;
+  std::list<DelegateInterface *> _rx_evt;
   /** The set of running threads. */
   std::list<pthread_t> _threads;
 };

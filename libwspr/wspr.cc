@@ -51,7 +51,7 @@ sdr::wspr_decode(const Buffer<int16_t> &in, std::list<WSPRMessage> &msgs, double
         for (int i=i1; i<jz; i++) { c4[i-i1] = c3[i]; }
       } else {
         /// @BUG somewhere in here!!!
-        for (int i=0; i<(i1+jz-1); i++) { c4[jz+i+i1] = c3[i]; }
+        for (int i=0; i<(jz+i1-1); i++) { c4[i-i1+1] = c3[i]; }
       }
       int jz=45000, ncycles=0, nerr=0;
       int metric[512];

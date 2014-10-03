@@ -148,22 +148,23 @@ WSPR2::decode_signal()
   msg << "WSPR-2: Start decoding...";
   Logger::get().log(msg);
 
-  std::list<WSPRMessage> msgs;
-  wspr_decode(_work, msgs);
+  wspr_decode(_work, _messages);
 
-  if (0 == msgs.size()) {
+  // Signal received messages
+  if (_messages.size()) {
+    signalMessagesReceived();
     LogMessage msg(LOG_DEBUG);
-    msg << "WSPR-2: Nothing found...";
+    msg << "WSPR-2: Received something...";
     Logger::get().log(msg);
-  }
-
-  std::list<WSPRMessage>::iterator item = msgs.begin();
-  for (; item != msgs.end(); item++) {
+  } else {
     LogMessage msg(LOG_DEBUG);
-    msg << "WSPR-2: Got '" << item->msg
-        << "' @ dF=" << item->df << ", dT=" << item->dt
-        << ", SNR=" << item->snr;
+    msg << "WSPR-2: Found nothing...";
     Logger::get().log(msg);
   }
 }
 
+void
+WSPR2::signalMessagesReceived() {
+  std::list<DelegateInterface *>::iterator item = _rx_evt.begin();
+  for (; item != _rx_evt.end(); item++) { (**item)(); }
+}

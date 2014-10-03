@@ -6,10 +6,10 @@
 using namespace sdr;
 
 
-WaterfallView::WaterfallView(gui::SpectrumProvider *spectrum, QWidget *parent)
-  : gui::WaterFallView(spectrum, 256, parent)
+WaterfallView::WaterfallView(Receiver *rx, QWidget *parent)
+  : gui::WaterFallView(rx->spectrum(), 256, parent), _rx(rx)
 {
-  // pass...
+  QObject::connect(this, SIGNAL(click(double)), this, SLOT(onClick(double)));
 }
 
 WaterfallView::~WaterfallView() {
@@ -36,4 +36,11 @@ WaterfallView::paintEvent(QPaintEvent *evt) {
   painter.fillRect(filter, color);
 
   painter.restore();
+}
+
+void
+WaterfallView::onClick(double dF) {
+  double Fc = _rx->freqCorrection();
+  Fc += dF;
+  _rx->setFreqCorrection(Fc);
 }
