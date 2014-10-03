@@ -1,6 +1,6 @@
 # sdr-wspr -- A WSPR receiver/decoder using libsdr.
 
-[https://en.wikipedia.org/wiki/WSPR_(amateur_radio_software)](WSPR) (Weak Signal Propagation Reporter) is a technique (actually the name of a software) to probe the propagation conditions in various amateur radio bands. Each station participating, sends its call sign, location and output power using a very slow (about 1.5 Baud) but robust digital mode (usually called WSPR). This implementation embeds the [http://physics.princeton.edu/pulsar/K1JT/wspr.html](original Fortran code) into a [https://github.com/hmatuschek/libsdr](libsdr) processing node, allowing to assemble a WSPR receiver for various sources easily.
+[WSPR](https://en.wikipedia.org/wiki/WSPR_(amateur_radio_software)) (Weak Signal Propagation Reporter) is a technique (actually the name of a software) to probe the propagation conditions in various amateur radio bands. Each station participating, sends its call sign, location and output power using a very slow (about 1.5 Baud) but robust digital mode (usually called WSPR). This implementation embeds the [original Fortran code](http://physics.princeton.edu/pulsar/K1JT/wspr.html) into a [libsdr](https://github.com/hmatuschek/libsdr) processing node, allowing to assemble a WSPR receiver for various sources easily.
 
 ## License
 
