@@ -1,4 +1,5 @@
 #include "wspr.hh"
+#include <iostream>
 
 void
 sdr::wspr_decode(const Buffer<int16_t> &in, std::list<WSPRMessage> &msgs, double Fbfo)
@@ -15,11 +16,15 @@ sdr::wspr_decode(const Buffer<int16_t> &in, std::list<WSPRMessage> &msgs, double
   jz = 45000;
   sync162_(reinterpret_cast<std::complex<float> *>(c2.data()), &jz, psd, sstf, &kz);
 
+  std::cerr << "Found " << kz << " candidates." << std::endl;
+
   if (0 >= kz) { return; }
 
   // For every candidate found
   for (int k=0; k<kz; k++)
   {
+    std::cerr << "Decode candidate " << k+1 << std::endl;
+
     float snrsync = sstf[5*k+0];
     float snrx    = sstf[5*k+1];
     float dtx     = sstf[5*k+2];
@@ -62,6 +67,7 @@ sdr::wspr_decode(const Buffer<int16_t> &in, std::list<WSPRMessage> &msgs, double
                  message, &ncycles, metric, &nerr);
       // Check message and store in list
       if (strncmp("      ", message, 6) && strncmp("000AAA", message, 6)) {
+        std::cerr << "Succcess. Got " << message << std::endl;
         WSPRMessage msg;
         msg.df = dfx; msg.dt = dtx; msg.snr = snrx;
         memcpy(msg.msg, message, 22);

@@ -5,8 +5,8 @@ using namespace sdr;
 
 Receiver::Receiver(double F, double IF, QObject *parent)
   : QObject(parent), _F(F), _Fcorr(0), _IF(IF), _Fbfo(1500),
-    _src(_F+_IF+_Fcorr, 240000), _cast(), _baseband(0, _Fbfo, 800, 16, 1, 12e3),
-    _demod(), _agc(), _wspr(), _audio(), _queue(Queue::get()), _monitor(true), _timer()
+    _src(_F+_IF+_Fcorr, 240000), _cast(), _baseband(0, _Fbfo, 800, 31, 1, 12e3),
+    _demod(), _agc(), _wspr(_Fbfo), _audio(), _queue(Queue::get()), _monitor(true), _timer()
 {
   _src.connect(&_cast, true);
   _cast.connect(&_baseband, true);
@@ -54,7 +54,6 @@ Receiver::frequency() const {
 void
 Receiver::setFrequency(double F) {
   _F = F;
-  std::cerr << "Tune to " << _F+_IF+_Fcorr << "Hz." << std::endl;
   _src.setFrequency(_F+_IF+_Fcorr);
   emit frequencyChanged(_F);
 }
@@ -114,6 +113,7 @@ Receiver::audioAGCEnabled() const {
 void
 Receiver::enableAudioAGC(bool enabled) {
   _agc.enable(enabled);
+  if (! enabled) { _agc.setGain(1); }
 }
 
 bool

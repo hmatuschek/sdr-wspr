@@ -7,7 +7,7 @@ using namespace sdr;
 WSPR2::WSPR2(double Fbfo)
   : Sink<int16_t>(), _Fbfo(Fbfo), _fshift(-_Fbfo, 12000), _state(STATE_WAIT),
     _N_rx(0), _rx_buff(1440000), _work(1440000),
-    _N_fft(0), _fft_in(512), _fft_out(512), _fft(_fft_in, _fft_out, FFT::FORWARD), _currPSD(512)
+    _N_fft(0), _fft_in(1024), _fft_out(1024), _fft(_fft_in, _fft_out, FFT::FORWARD), _currPSD(1024)
 {
   // pass...
 }
@@ -24,12 +24,12 @@ WSPR2::isInputReal() const {
 
 double
 WSPR2::sampleRate() const {
-  return 375;
+  return 750; //375;
 }
 
 size_t
 WSPR2::fftSize() const {
-  return 512;
+  return 1024;
 }
 
 const Buffer<double> &
@@ -60,6 +60,12 @@ WSPR2::config(const Config &src_cfg) {
   // Receiver state
   _state = STATE_WAIT; _N_rx = 0;
 
+  LogMessage msg(LOG_DEBUG);
+  msg << "Configure WSPR2 node:" << std::endl
+      << " sample-rate: " << src_cfg.sampleRate() << std::endl
+      << " F_bfo: " << _Fbfo;
+  Logger::get().log(msg);
+
   emit spectrumConfigured();
 }
 
@@ -69,8 +75,7 @@ WSPR2::process(const Buffer<int16_t> &buffer, bool allow_overwrite)
 {
   /// @todo Perform interpolation sub-sampling to get exactly 12kHz sample rate here!
 
-  size_t i=0;
-  while (i<buffer.size())
+  for (size_t i=0; i<buffer.size(); i++)
   {
     // Store samples in RX buffer if RX is enabled
     if ((STATE_RX == _state) && (1440000 > _N_rx)) {
@@ -78,18 +83,19 @@ WSPR2::process(const Buffer<int16_t> &buffer, bool allow_overwrite)
     }
 
     // Shift frequency and sub-sample by 16 (for spectrum)
-    _curr_avg += _fshift.applyFrequencyShift(buffer[i]); _avg_count++; i++;
-    if (32 == _avg_count) {
-      _fft_in[_N_fft] = _curr_avg/float( 32.0 * (1<<16) );
+    _curr_avg += _fshift.applyFrequencyShift(buffer[i]); _avg_count++;
+    if (16 == _avg_count) {
+      _fft_in[_N_fft] = _curr_avg/float( 16.0 * (1<<16) );
       _curr_avg=0; _avg_count=0; _N_fft++;
     }
+
     // If 512 samples have been received -> update spectrum
-    if (512 == _N_fft) {
+    if (1024 == _N_fft) {
       _N_fft = 0;
       // Compute FFT
       _fft();
       // Compute PSD and update avg PSD, PSDs
-      for (size_t j=0; j<512; j++) {
+      for (size_t j=0; j<1024; j++) {
         _currPSD[j] = _fft_out[j].real()*_fft_out[j].real()
             + _fft_out[j].imag()*_fft_out[j].imag();
       }
@@ -103,7 +109,8 @@ WSPR2::process(const Buffer<int16_t> &buffer, bool allow_overwrite)
       // Copy content to _work
       memcpy(_work.ptr(), _rx_buff.ptr(), sizeof(int16_t)*1440000);
       // Start decoding in another thread
-      start_decode();
+      //start_decode();
+      decode_signal();
     }
   }
 }

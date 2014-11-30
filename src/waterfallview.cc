@@ -7,7 +7,7 @@ using namespace sdr;
 
 
 WaterfallView::WaterfallView(Receiver *rx, QWidget *parent)
-  : gui::WaterFallView(rx->spectrum(), 256, parent), _rx(rx)
+  : gui::WaterFallView(rx->spectrum(), 256, gui::WaterFallView::BOTTOM_UP, parent), _rx(rx)
 {
   QObject::connect(this, SIGNAL(click(double)), this, SLOT(onClick(double)));
 }
@@ -22,10 +22,10 @@ WaterfallView::paintEvent(QPaintEvent *evt) {
 
   QPainter painter(this);
   painter.setRenderHint(QPainter::Antialiasing);
-  painter.save();
 
   // Clip region to update
   painter.setClipRect(evt->rect());
+  painter.save();
 
   // Draw filter area:
   QRect filter; QColor color(0,0,255, 64);
