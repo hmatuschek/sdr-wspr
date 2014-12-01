@@ -32,7 +32,14 @@ public:
   void log() {
     std::list<WSPRMessage>::iterator msg = _wspr.messages().begin();
     for (; msg != _wspr.messages().end(); msg++) {
-      std::cout << "Received: '" << msg->msg << "' @ SNR=" << msg->snr << std::endl;
+      if (msg->isValid()) {
+        std::cout << "Received " << msg->callsign()
+                  << " from " << msg->locator()
+                  << " using " << msg->powerW()
+                  << "W with SNR=" << msg->snr << std::endl;
+      } else {
+        std::cout << "Received (inv): '" << msg->msg << "' @ SNR=" << msg->snr << std::endl;
+      }
     }
   }
 

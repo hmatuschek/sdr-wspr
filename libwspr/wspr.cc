@@ -1,4 +1,86 @@
 #include "wspr.hh"
+#include <iostream>
+
+
+bool sdr::WSPRMessage::isValid() const {
+  char call[23], loc[23], pwr[23];
+
+  const char *ptr = msg, *call_ptr = msg;
+  for(; (*ptr)!=' ' ; ptr++) {}
+  strncpy(call, call_ptr, ptr-call_ptr);
+  call[ptr-call_ptr] = 0; ptr++;
+
+  const char *loc_ptr = ptr;
+  for(; (*ptr)!=' '; ptr++) {}
+  strncpy(loc, loc_ptr, ptr-loc_ptr);
+  loc[ptr-loc_ptr] = 0; ptr++;
+
+  const char *pwr_ptr = ptr;
+  for(; (*ptr)!=' '; ptr++) {}
+  strncpy(pwr, pwr_ptr, ptr-pwr_ptr);
+  pwr[ptr-pwr_ptr] = 0;
+
+  return (4 == strlen(loc)) || (6 == strlen(loc));
+}
+
+std::string
+sdr::WSPRMessage::callsign() const {
+  char call[23];
+
+  const char *ptr = msg, *call_ptr = msg;
+  for(; (*ptr)!=' ' ; ptr++) {}
+  strncpy(call, call_ptr, ptr-call_ptr);
+  call[ptr-call_ptr] = 0;
+
+  return call;
+}
+
+
+std::string
+sdr::WSPRMessage::locator() const {
+  char loc[23];
+
+  const char *ptr = msg;
+  for(; (*ptr)!=' ' ; ptr++) {}
+  ptr++;
+
+  const char *loc_ptr = ptr;
+  for(; (*ptr)!=' '; ptr++) {}
+  strncpy(loc, loc_ptr, ptr-loc_ptr);
+  loc[ptr-loc_ptr] = 0;
+  return loc;
+}
+
+int sdr::WSPRMessage::power() const {
+  char pwr[23];
+
+  const char *ptr = msg;
+  for(; (*ptr)!=' ' ; ptr++) {} ptr++;
+  for(; (*ptr)!=' ' ; ptr++) {} ptr++;
+
+  const char *pwr_ptr = ptr;
+  for(; (*ptr)!=' '; ptr++) {}
+  strncpy(pwr, pwr_ptr, ptr-pwr_ptr);
+  pwr[ptr-pwr_ptr] = 0;
+
+  return atoi(pwr);
+}
+
+float sdr::WSPRMessage::powerW() const {
+  char pwr[23];
+
+  const char *ptr = msg;
+  for(; (*ptr)!=' ' ; ptr++) {} ptr++;
+  for(; (*ptr)!=' ' ; ptr++) {} ptr++;
+
+  const char *pwr_ptr = ptr;
+  for(; (*ptr)!=' '; ptr++) {}
+  strncpy(pwr, pwr_ptr, ptr-pwr_ptr);
+  pwr[ptr-pwr_ptr] = 0;
+
+  return std::pow(10, atof(pwr)/10)/1000;
+}
+
 
 /*
  * This function is basically a C re-implementation of the mept162 Fortran routine of the

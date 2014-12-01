@@ -66,6 +66,17 @@ typedef struct {
   float snr;    ///< Signal strength in db SNR.
   char msg[22]; ///< Message text (CALLSIGN [SPACE] LOCATOR [SPACE] TXPOWER), where TXPOWER is
                 ///  given in dBm.
+
+  /** Returns true if the message body is a valid WSPRnet message. */
+  bool isValid() const;
+  /** Returns the calls sign. */
+  std::string callsign() const;
+  /** Returns the locator. */
+  std::string locator() const;
+  /** Returns the tx power in dB mW. */
+  int power() const;
+  /** Returns the tx power in W. */
+  float powerW() const;
 } WSPRMessage;
 
 /** Decodes the WSPR signals in real buffer @c in +/- 100Hz around @c Fbfo. The signal is required
