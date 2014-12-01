@@ -2,19 +2,27 @@
 #define WSPR_HH
 
 #include <complex>
+#include <cstdlib>
 
 /* C Interfaces to FORTRAN routines. */
 
 extern "C" {
 
+/** Down-sampling by 32 and computation of avg psd.
+ * @param in (in) Pointer to the signal (2min @ 12kHz = 144000 samples).
+ * @param npts (in) Number of samples in @c in.
+ * @param nbfo (in) BFO frequency.
+ * @param out (out) Down-sampled and shifted (-Fbfo) signal.
+ * @param jz (out) Number of samples in @c out.
+ * @param psd (out) flaot[513] Avg. PSD. */
 void mix162_(int16_t *in, int *npts, int *nbfo, std::complex<float> *out, int *jz, float *psd);
 
 /** Searches for signal candidates in the time-series.
- * @param c2 A vector of size 45000, the complex time-series centered at band-center.
- * @param jz The length of the vector c2?
- * @param ps The average power-spectrum (vector of length 512)?
- * @param sstf The vector of signal-candidate properties found dim=(5,275).
- * @param kz The number of signals found. */
+ * @param c2 (in) A vector of size 45000, the complex time-series centered at band-center.
+ * @param jz (in) The length of the vector c2?
+ * @param ps (in) The average power-spectrum (vector of length 513)?
+ * @param sstf (out) The vector of signal-candidate properties found dim=(5,275).
+ * @param kz (out) The number of signals found. */
 void sync162_(std::complex<float> *c2, int *jz, float *ps, float *sstf, int *kz);
 
 /** Corrects the frequency drift of the given signal.

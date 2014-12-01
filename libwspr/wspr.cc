@@ -1,21 +1,26 @@
 #include "wspr.hh"
 #include <iostream>
 
+/*
+ * This function is basically a C re-implementation of the mept162 Fortran routine of the
+ * original WSPR code.
+ */
 void
 sdr::wspr_decode(const Buffer<int16_t> &in, std::list<WSPRMessage> &msgs, double Fbfo)
 {
-  float psd[513];    // Average power spectrum ??? why 513 and not 512 ?!?
+  float psd[513];    // Average power spectrum (+/- 256, incl 0, hence 256 + 1 + 256 elments)
   for (int i=0; i<513; i++) { psd[i] = 0; }
-  Buffer< std::complex<float> > c2(65536);
-  int npts=in.size(), nbfo=Fbfo, jz=c2.size();
-  mix162_(reinterpret_cast<int16_t *>(in.data()), &npts, &nbfo,
-          reinterpret_cast<std::complex<float> *>(c2.data()), &jz, psd);
 
-  for (size_t i=0; i<513; i++) { psd[i] = 0; }
+  std::complex<float> c2[65536];
+  for (int i=0; i<65536; i++) { c2[i] = 0; }
+
+  int npts=in.size(), nbfo=Fbfo, jz;
+  mix162_(reinterpret_cast<int16_t *>(in.data()), &npts, &nbfo, c2, &jz, psd);
+
   float sstf[5*275]; // 5x275 - column major
-  int kz = 0;        // The number of signal candidates found
+  int kz = 0;        // (out) The number of signal candidates found
   jz = 45000;
-  sync162_(reinterpret_cast<std::complex<float> *>(c2.data()), &jz, psd, sstf, &kz);
+  sync162_(c2, &jz, psd, sstf, &kz);
 
   std::cerr << "Found " << kz << " candidates." << std::endl;
 
@@ -33,39 +38,38 @@ sdr::wspr_decode(const Buffer<int16_t> &in, std::list<WSPRMessage> &msgs, double
     float drift   = sstf[5*k+4];
 
     // Fix frequency drift, store result into c3
-    float a[5] = { -dfx, -0.5*drift, 0.0, 0.0, 0.0 };
-    Buffer< std::complex<float> > c3(45000);
+    float a[5] = { -dfx, float(-0.5*drift), 0.0, 0.0, 0.0 };
+    std::complex<float> c3[45000];
     int jz = 45000;
-    twkfreq_(reinterpret_cast<std::complex<float> *>(c2.data()),
-             reinterpret_cast<std::complex<float> *>(c3.data()), &jz, a);
+    for (int i=0; i<45000; i++) { c3[i] = 0; }
+    twkfreq_(c2, c3, &jz, a);
 
     // Decode signal
     char message[22];
     for (size_t i=0; i<22; i++) { message[i] = 0; }
 
-    int minsync = 1; int nsync = snrsync;
+    int minsync = 1; int nsync = round(snrsync);
     if (nsync < 0) { nsync = 0; }
 
-    float minsnr = -33; int nsnrx = snrx;
+    float minsnr = -33; int nsnrx = round(snrx);
     if (nsnrx < minsnr) { nsnrx = minsnr; }
     if ((nsync < minsync) || (nsnrx < minsnr)) { continue; }
 
     float dt = 1./375;
     for (int idt=0; idt<=128; idt++) {
-      int ii = (idt)/2;
+      int ii = (idt+1)/2;
       if (idt%2) { ii = -ii; }
-      int i1 = (dtx+2.0)/dt + ii; // Start index for synced symbols.
-      Buffer< std::complex<float> > c4(45000); int jz=45000;
-      for (size_t i=0; i<45000; i++) { c4[i] = 0; }
+      int i1 = round((dtx+2.0)/dt) + ii-1; // Start index for synced symbols.
+      std::complex<float> c4[45000];
+      for (int i=0; i<45000; i++) { c4[i] = 0; }
       if (i1 >= 0) {
         for (int i=i1; i<jz; i++) { c4[i-i1] = c3[i]; }
       } else {
-        for (int i=0; i<(jz+i1); i++) { c4[i+-i1+1] = c3[i]; }
+        for (int i=0; i<(jz+i1-1); i++) { c4[i+2-i1] = c3[i]; }
       }
       int ncycles=0, nerr=0;
-      int metric[512];
-      decode162_(reinterpret_cast<std::complex<float> *>(c4.data()), &jz,
-                 message, &ncycles, metric, &nerr);
+      int metric[512]; int nc4=45000;
+      decode162_(c4, &nc4, message, &ncycles, metric, &nerr);
       // Check message and store in list
       if (strncmp("      ", message, 6) && strncmp("000AAA", message, 6)) {
         std::cerr << "Succcess. Got " << message << std::endl;

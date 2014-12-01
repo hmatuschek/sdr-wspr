@@ -1,6 +1,7 @@
 #include <iostream>
 #include <getopt.h>
 #include <csignal>
+#include <unistd.h>
 
 #include "logger.hh"
 #include "portaudio.hh"
