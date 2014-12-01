@@ -8,6 +8,10 @@
 
 extern "C" {
 
+typedef struct {
+  float re, im;
+} cmplx_t;
+
 /** Down-sampling by 32 and computation of avg psd.
  * @param in (in) Pointer to the signal (2min @ 12kHz = 144000 samples).
  * @param npts (in) Number of samples in @c in.
@@ -15,7 +19,7 @@ extern "C" {
  * @param out (out) Down-sampled and shifted (-Fbfo) signal.
  * @param jz (out) Number of samples in @c out.
  * @param psd (out) flaot[513] Avg. PSD. */
-void mix162_(int16_t *in, int *npts, int *nbfo, std::complex<float> *out, int *jz, float *psd);
+void mix162_(int16_t *in, int *npts, int *nbfo, cmplx_t *out, int *jz, float *psd);
 
 /** Searches for signal candidates in the time-series.
  * @param c2 (in) A vector of size 45000, the complex time-series centered at band-center.
@@ -23,14 +27,14 @@ void mix162_(int16_t *in, int *npts, int *nbfo, std::complex<float> *out, int *j
  * @param ps (in) The average power-spectrum (vector of length 513)?
  * @param sstf (out) The vector of signal-candidate properties found dim=(5,275).
  * @param kz (out) The number of signals found. */
-void sync162_(std::complex<float> *c2, int *jz, float *ps, float *sstf, int *kz);
+void sync162_(cmplx_t *c2, int *jz, float *ps, float *sstf, int *kz);
 
 /** Corrects the frequency drift of the given signal.
  * @param in A vector of (max) size 45000.
  * @param out A vector of (max) size 45000.
  * @param N The vector length.
  * @param coef The 3 parameters. */
-void twkfreq_(std::complex<float> *in, std::complex<float> *out, int *N, float *coef);
+void twkfreq_(cmplx_t *in, cmplx_t *out, int *N, float *coef);
 
 /** Decodes a corrected signal.
  * @param sig The corrected signal (complex vector of (max) length 45000).
@@ -39,7 +43,7 @@ void twkfreq_(std::complex<float> *in, std::complex<float> *out, int *N, float *
  * @param ncycles ???
  * @param metric ???. 256x2 integer table.
  * @param nerr The number of deconding errors? */
-void decode162_(std::complex<float> *sig, int *N, char *message, int *Ncycles, int *metric, int *nerr);
+void decode162_(cmplx_t *sig, int *N, char *message, int *Ncycles, int *metric, int *nerr);
 
 /** Computes the distance between two locators (up to 6 char locators,
  * the last two chars can be ' '). */

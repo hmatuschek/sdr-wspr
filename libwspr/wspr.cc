@@ -10,8 +10,8 @@ sdr::wspr_decode(const Buffer<int16_t> &in, std::list<WSPRMessage> &msgs, double
   float psd[513];    // Average power spectrum (+/- 256, incl 0, hence 256 + 1 + 256 elments)
   for (int i=0; i<513; i++) { psd[i] = 0; }
 
-  std::complex<float> c2[65536];
-  for (int i=0; i<65536; i++) { c2[i] = 0; }
+  cmplx_t *c2 = new cmplx_t[65536];
+  for (int i=0; i<65536; i++) { c2[i].re=0; c2[i].im=0;}
 
   int npts=in.size(), nbfo=Fbfo, jz;
   mix162_(reinterpret_cast<int16_t *>(in.data()), &npts, &nbfo, c2, &jz, psd);
@@ -21,7 +21,10 @@ sdr::wspr_decode(const Buffer<int16_t> &in, std::list<WSPRMessage> &msgs, double
   jz = 45000;
   sync162_(c2, &jz, psd, sstf, &kz);
 
-  if (0 >= kz) { return; }
+  if (0 >= kz) { delete[] c2; return; }
+
+  cmplx_t *c3 = new cmplx_t[45000];
+  cmplx_t *c4 = new cmplx_t[45000];
 
   // For every candidate found
   for (int k=0; k<kz; k++)
@@ -34,9 +37,8 @@ sdr::wspr_decode(const Buffer<int16_t> &in, std::list<WSPRMessage> &msgs, double
 
     // Fix frequency drift, store result into c3
     float a[5] = { -dfx, float(-0.5*drift), 0.0, 0.0, 0.0 };
-    std::complex<float> c3[45000];
     int jz = 45000;
-    for (int i=0; i<45000; i++) { c3[i] = 0; }
+    for (int i=0; i<45000; i++) { c3[i].re=0; c3[i].im=0; }
     twkfreq_(c2, c3, &jz, a);
 
     // Decode signal
@@ -48,15 +50,16 @@ sdr::wspr_decode(const Buffer<int16_t> &in, std::list<WSPRMessage> &msgs, double
 
     float minsnr = -33; int nsnrx = round(snrx);
     if (nsnrx < minsnr) { nsnrx = minsnr; }
-    if ((nsync < minsync) || (nsnrx < minsnr)) { continue; }
+    if ((nsync < minsync) || (nsnrx < minsnr)) {
+      continue;
+    }
 
     float dt = 1./375;
     for (int idt=0; idt<=128; idt++) {
       int ii = (idt+1)/2;
       if (idt%2) { ii = -ii; }
       int i1 = round((dtx+2.0)/dt) + ii-1; // Start index for synced symbols.
-      std::complex<float> c4[45000];
-      for (int i=0; i<45000; i++) { c4[i] = 0; }
+      for (int i=0; i<45000; i++) { c4[i].re=0; c4[i].im=0; }
       if (i1 >= 0) {
         for (int i=i1; i<jz; i++) { c4[i-i1] = c3[i]; }
       } else {
@@ -75,6 +78,9 @@ sdr::wspr_decode(const Buffer<int16_t> &in, std::list<WSPRMessage> &msgs, double
       }
     }
   }
+
+  delete[] c3;
+  delete[] c4;
 }
 
 

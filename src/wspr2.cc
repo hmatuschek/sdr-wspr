@@ -110,8 +110,8 @@ WSPR2::process(const Buffer<int16_t> &buffer, bool allow_overwrite)
       // Copy content to _work
       memcpy(_work.ptr(), _rx_buff.ptr(), sizeof(int16_t)*1440000);
       // Start decoding in another thread
-      start_decode();
-      //decode_signal();
+      //start_decode();
+      decode_signal();
     }
   }
 }
