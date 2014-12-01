@@ -105,6 +105,8 @@ protected:
   std::list<WSPRMessage> _messages;
   /** Callbacks that get notified once a message has been received. */
   std::list<DelegateInterface *> _rx_evt;
+  /** Thread list mutex. */
+  pthread_mutex_t _threads_lock;
   /** The set of running threads. */
   std::list<pthread_t> _threads;
 };

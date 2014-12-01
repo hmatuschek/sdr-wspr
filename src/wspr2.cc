@@ -7,9 +7,10 @@ using namespace sdr;
 WSPR2::WSPR2(double Fbfo)
   : Sink<int16_t>(), _Fbfo(Fbfo), _fshift(-_Fbfo, 12000), _state(STATE_WAIT),
     _N_rx(0), _rx_buff(1440000), _work(1440000),
-    _N_fft(0), _fft_in(1024), _fft_out(1024), _fft(_fft_in, _fft_out, FFT::FORWARD), _currPSD(1024)
+    _N_fft(0), _fft_in(1024), _fft_out(1024), _fft(_fft_in, _fft_out, FFT::FORWARD),
+    _currPSD(1024), _threads_lock(), _threads()
 {
-  // pass...
+  pthread_mutex_init(&_threads_lock, 0);
 }
 
 WSPR2::~WSPR2() {
@@ -118,11 +119,16 @@ WSPR2::process(const Buffer<int16_t> &buffer, bool allow_overwrite)
 
 void
 WSPR2::join() {
+  pthread_mutex_lock(&_threads_lock);
   std::list<pthread_t>::iterator thread = _threads.begin();
-  for(; thread!=_threads.end(); thread++) {
+  for(; thread != _threads.end(); thread++) {
     void *ret=0;
-    pthread_join(*thread, &ret);
+    pthread_t p = *thread;
+    pthread_mutex_unlock(&_threads_lock);
+    pthread_join(p, &ret);
+    pthread_mutex_lock(&_threads_lock);
   }
+  pthread_mutex_unlock(&_threads_lock);
 }
 
 
@@ -134,7 +140,9 @@ WSPR2::start_decode() {
     err << "WSPR2: Can not create decoding thread!";
     throw err;
   }
+  pthread_mutex_lock(&_threads_lock);
   _threads.push_back(thread);
+  pthread_mutex_unlock(&_threads_lock);
 }
 
 
@@ -146,14 +154,15 @@ WSPR2::_pthread_decode_func(void *ctx)
   self->decode_signal();
 
   // Remove thread from list of running threads:
+  pthread_mutex_lock(&(self->_threads_lock));
   std::list<pthread_t>::iterator thread = self->_threads.begin();
   for (; thread != self->_threads.end(); thread++) {
     if ((*thread) == pthread_self()) {
       self->_threads.erase(thread);
-      return 0;
+      break;
     }
   }
-
+  pthread_mutex_unlock(&(self->_threads_lock));
   return 0;
 }
 
