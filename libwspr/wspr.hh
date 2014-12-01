@@ -3,6 +3,8 @@
 
 #include <complex>
 
+/* C Interfaces to FORTRAN routines. */
+
 extern "C" {
 
 void mix162_(int16_t *in, int *npts, int *nbfo, std::complex<float> *out, int *jz, float *psd);
@@ -31,7 +33,8 @@ void twkfreq_(std::complex<float> *in, std::complex<float> *out, int *N, float *
  * @param nerr The number of deconding errors? */
 void decode162_(std::complex<float> *sig, int *N, char *message, int *Ncycles, int *metric, int *nerr);
 
-/** Computes the distance between two locators (up to 6 char locators, the last two char can be ' '). */
+/** Computes the distance between two locators (up to 6 char locators,
+ * the last two chars can be ' '). */
 void azdist_(char *loc_a, char *loc_b,
              double *utch, int *nAz, int *nEl,
              int *nDmiles, int *nDkm,
@@ -39,20 +42,24 @@ void azdist_(char *loc_a, char *loc_b,
 
 }
 
+
 #include "buffer.hh"
 
 namespace sdr {
 
+/** The WSPR message type. */
 typedef struct {
   float df;     ///< Frequency of the signal w.r.t the center frequency. (Hz)
   float dt;     ///< Time-delay of signal (s).
-  float snr;    ///< Signal strength in db over noise.
-  char msg[22]; ///< Message text (CALLSIGN [SPACE] LOCATOR [SPACE] TXPOWER), where TXPOWER is given
-                ///  in dBm.
+  float snr;    ///< Signal strength in db SNR.
+  char msg[22]; ///< Message text (CALLSIGN [SPACE] LOCATOR [SPACE] TXPOWER), where TXPOWER is
+                ///  given in dBm.
 } WSPRMessage;
 
+/** Decodes the WSPR signals in real buffer @c in +/- 100Hz around @c Fbfo. The signal is required
+ * to have 12 kHz sample rate. Decoded messages are appended to @c msgs. */
 void wspr_decode(const Buffer<int16_t> &in, std::list<WSPRMessage> &msgs, double Fbfo=1.5e3);
-
+/** Computes the distance between the locators. */
 double loc_dist(const std::string &loc_a, const std::string &loc_b);
 
 }

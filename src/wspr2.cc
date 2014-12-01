@@ -166,9 +166,9 @@ WSPR2::decode_signal()
   Logger::get().log(msg);
 
   // Decode signal and append messages to list
-  wspr_decode(_work, _messages);
+  wspr_decode(_work, _messages, _Fbfo);
 
-  if (_messages.size()) {
+  if (0 < _messages.size()) {
     // Signal received messages
     signalMessagesReceived();
 

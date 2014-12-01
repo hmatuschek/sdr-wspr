@@ -4,9 +4,10 @@
 void
 sdr::wspr_decode(const Buffer<int16_t> &in, std::list<WSPRMessage> &msgs, double Fbfo)
 {
-  float psd[513];    // Average power spectrum
+  float psd[513];    // Average power spectrum ??? why 513 and not 512 ?!?
+  for (int i=0; i<513; i++) { psd[i] = 0; }
   Buffer< std::complex<float> > c2(65536);
-  int npts = in.size(); int nbfo = Fbfo, jz=c2.size();
+  int npts=in.size(), nbfo=Fbfo, jz=c2.size();
   mix162_(reinterpret_cast<int16_t *>(in.data()), &npts, &nbfo,
           reinterpret_cast<std::complex<float> *>(c2.data()), &jz, psd);
 
@@ -54,14 +55,14 @@ sdr::wspr_decode(const Buffer<int16_t> &in, std::list<WSPRMessage> &msgs, double
       int ii = (idt)/2;
       if (idt%2) { ii = -ii; }
       int i1 = (dtx+2.0)/dt + ii; // Start index for synced symbols.
-      Buffer< std::complex<float> > c4(45000);
+      Buffer< std::complex<float> > c4(45000); int jz=45000;
       for (size_t i=0; i<45000; i++) { c4[i] = 0; }
       if (i1 >= 0) {
         for (int i=i1; i<jz; i++) { c4[i-i1] = c3[i]; }
       } else {
         for (int i=0; i<(jz+i1); i++) { c4[i+-i1+1] = c3[i]; }
       }
-      int jz=45000, ncycles=0, nerr=0;
+      int ncycles=0, nerr=0;
       int metric[512];
       decode162_(reinterpret_cast<std::complex<float> *>(c4.data()), &jz,
                  message, &ncycles, metric, &nerr);

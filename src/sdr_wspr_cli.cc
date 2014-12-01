@@ -78,7 +78,12 @@ int main(int argc, char *argv[])
   WSPR2 wspr(Fbfo);  // BFO freq 800 Hz
   WSPRMessageLogger msglog(wspr);
 
-  if ( ("file" == type) && is_file) {
+  if ("file" == type)
+  {
+    if (! is_file) {
+      std::cout << "Can not open file '" << arg << "'." << std::endl;
+      return -1;
+    }
     wav_source = new WavSource(arg);
     rcast = new AutoCast< int16_t >();
     subsample = new InpolSubSampler<int16_t>(wav_source->sampleRate()/12e3);
