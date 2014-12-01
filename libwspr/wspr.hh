@@ -60,7 +60,8 @@ void azdist_(char *loc_a, char *loc_b,
 namespace sdr {
 
 /** The WSPR message type. */
-typedef struct {
+class WSPRMessage {
+public:
   float df;     ///< Frequency of the signal w.r.t the center frequency. (Hz)
   float dt;     ///< Time-delay of signal (s).
   float snr;    ///< Signal strength in db SNR.
@@ -77,7 +78,7 @@ typedef struct {
   int power() const;
   /** Returns the tx power in W. */
   float powerW() const;
-} WSPRMessage;
+};
 
 /** Decodes the WSPR signals in real buffer @c in +/- 100Hz around @c Fbfo. The signal is required
  * to have 12 kHz sample rate. Decoded messages are appended to @c msgs. */
