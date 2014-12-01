@@ -8,9 +8,10 @@ WSPR2::WSPR2(double Fbfo)
   : Sink<int16_t>(), _Fbfo(Fbfo), _fshift(-_Fbfo, 12000), _state(STATE_WAIT),
     _N_rx(0), _rx_buff(1440000), _work(1440000),
     _N_fft(0), _fft_in(1024), _fft_out(1024), _fft(_fft_in, _fft_out, FFT::FORWARD),
-    _currPSD(1024), _threads_lock(), _threads()
+    _currPSD(1024), _threads_lock(), _threads_cond(), _num_threads(0)
 {
   pthread_mutex_init(&_threads_lock, 0);
+  pthread_cond_init(&_threads_cond, 0);
 }
 
 WSPR2::~WSPR2() {
@@ -110,8 +111,8 @@ WSPR2::process(const Buffer<int16_t> &buffer, bool allow_overwrite)
       // Copy content to _work
       memcpy(_work.ptr(), _rx_buff.ptr(), sizeof(int16_t)*1440000);
       // Start decoding in another thread
-      //start_decode();
-      decode_signal();
+      start_decode();
+      //decode_signal();
     }
   }
 }
@@ -120,13 +121,8 @@ WSPR2::process(const Buffer<int16_t> &buffer, bool allow_overwrite)
 void
 WSPR2::join() {
   pthread_mutex_lock(&_threads_lock);
-  std::list<pthread_t>::iterator thread = _threads.begin();
-  for(; thread != _threads.end(); thread++) {
-    void *ret=0;
-    pthread_t p = *thread;
-    pthread_mutex_unlock(&_threads_lock);
-    pthread_join(p, &ret);
-    pthread_mutex_lock(&_threads_lock);
+  while (_num_threads > 0) {
+    pthread_cond_wait(&_threads_cond, &_threads_lock);
   }
   pthread_mutex_unlock(&_threads_lock);
 }
@@ -141,7 +137,7 @@ WSPR2::start_decode() {
     throw err;
   }
   pthread_mutex_lock(&_threads_lock);
-  _threads.push_back(thread);
+  _num_threads++;
   pthread_mutex_unlock(&_threads_lock);
 }
 
@@ -155,13 +151,8 @@ WSPR2::_pthread_decode_func(void *ctx)
 
   // Remove thread from list of running threads:
   pthread_mutex_lock(&(self->_threads_lock));
-  std::list<pthread_t>::iterator thread = self->_threads.begin();
-  for (; thread != self->_threads.end(); thread++) {
-    if ((*thread) == pthread_self()) {
-      self->_threads.erase(thread);
-      break;
-    }
-  }
+  self->_num_threads--;
+  pthread_cond_signal(&(self->_threads_cond));
   pthread_mutex_unlock(&(self->_threads_lock));
   return 0;
 }
@@ -182,7 +173,7 @@ WSPR2::decode_signal()
     signalMessagesReceived();
 
     LogMessage msg(LOG_DEBUG);
-    msg << "WSPR-2: Received something...";
+    msg << "WSPR-2: Received " << _messages.size() << " messages.";
     Logger::get().log(msg);
   } else {
     LogMessage msg(LOG_DEBUG);
@@ -196,5 +187,7 @@ void
 WSPR2::signalMessagesReceived() {
   // Just notify the delegates.
   std::list<DelegateInterface *>::iterator item = _rx_evt.begin();
-  for (; item != _rx_evt.end(); item++) { (**item)(); }
+  for (; item != _rx_evt.end(); item++) {
+    (**item)();
+  }
 }

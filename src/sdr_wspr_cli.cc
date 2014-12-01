@@ -32,7 +32,7 @@ public:
   void log() {
     std::list<WSPRMessage>::iterator msg = _wspr.messages().begin();
     for (; msg != _wspr.messages().end(); msg++) {
-      std::cout << "Received: '" << msg->msg << " @ SNR=" << msg->snr << std::endl;
+      std::cout << "Received: '" << msg->msg << "' @ SNR=" << msg->snr << std::endl;
     }
   }
 
@@ -121,7 +121,6 @@ int main(int argc, char *argv[])
   Queue::get().wait();
 
   wspr.join();
-  msglog.log();
 
   PortAudio::terminate();
 

@@ -107,8 +107,8 @@ protected:
   std::list<DelegateInterface *> _rx_evt;
   /** Thread list mutex. */
   pthread_mutex_t _threads_lock;
-  /** The set of running threads. */
-  std::list<pthread_t> _threads;
+  pthread_cond_t  _threads_cond;
+  int _num_threads;
 };
 
 
