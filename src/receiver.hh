@@ -27,10 +27,16 @@ public:
 
   void join();
 
-  SourceType sourceType();
+  SourceType sourceType() const;
   void setSourceType(SourceType type);
 
   QWidget *createSourceControl();
+
+  double frequency() const;
+  void setFrequency(double F);
+
+  double bfoFrequency() const;
+  void setBfoFrequency(double F);
 
   bool audioAGCEnabled() const;
   void enableAudioAGC(bool enabled);

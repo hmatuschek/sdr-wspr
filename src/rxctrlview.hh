@@ -6,6 +6,7 @@
 #include <QComboBox>
 #include <QCheckBox>
 #include <QTableView>
+#include <QVBoxLayout>
 
 #include "receiver.hh"
 
@@ -18,12 +19,23 @@ public:
   explicit RXCtrlView(Receiver *rx, QWidget *parent = 0);
 
 protected slots:
+  void onSourceSelected(int idx);
+  void onBandSelected(int idx);
+  void onRXFreqChanged(double F);
+  void onBfoFrequencyChanged();
+
   void onAudioAGCToggled(bool enabled);
   void onMonitorToggled(bool enabled);
 
 protected:
   Receiver *_rx;
 
+  QVBoxLayout *_rx_layout;
+  QComboBox *_input;
+
+  QComboBox *_band;
+  QLineEdit *_freq;
+  QLineEdit *_Fbfo;
 
   QCheckBox *_audio_agc;
   QCheckBox *_monitor;

@@ -8,8 +8,8 @@ Receiver::Receiver(SourceType type, QObject *parent)
     _agc(), _wspr(_Fbfo), _audio(), _queue(Queue::get()), _monitor(true), _timer()
 {
   switch (_sourceType) {
-  case AUDIO_SOURCE: _source = new AudioInput(); break;
-  case RTL_SOURCE: _source = new RTLInput(10.140e6, 8e2); break;
+  case AUDIO_SOURCE: _source = new AudioInput(10.1402e6, 8e2); break;
+  case RTL_SOURCE: _source = new RTLInput(10.1402e6, 8e2); break;
   }
 
   _source->source()->connect(&_agc, true);
@@ -48,6 +48,57 @@ Receiver::spectrum() {
 void
 Receiver::join() {
   _wspr.join();
+}
+
+Receiver::SourceType
+Receiver::sourceType() const {
+  return _sourceType;
+}
+
+void
+Receiver::setSourceType(SourceType type) {
+  // Get the current frequency and BFO freq.
+  double F = _source->frequency();
+  double Fbfo = _source->bfoFrequency();
+  // Stop queue (if running)
+  bool is_running = sdr::Queue::get().isRunning();
+  if (is_running) {
+    sdr::Queue::get().stop();
+    sdr::Queue::get().wait();
+  }
+  // Delete current source:
+  delete _source;
+  // Create new source
+  _sourceType = type;
+  switch (_sourceType) {
+  case AUDIO_SOURCE: _source = new AudioInput(F, Fbfo); break;
+  case RTL_SOURCE: _source = new RTLInput(F, Fbfo); break;
+  }
+  // Connect source
+  _source->source()->connect(&_agc, true);
+  // Restart queue (if running)
+  if (is_running) { sdr::Queue::get().start(); }
+}
+
+double
+Receiver::frequency() const {
+  return _source->frequency();
+}
+
+void
+Receiver::setFrequency(double F) {
+  _source->setFrequency(F);
+}
+
+double
+Receiver::bfoFrequency() const {
+  return _Fbfo;
+}
+
+void
+Receiver::setBfoFrequency(double F) {
+  _Fbfo = F; _source->setBfoFrequency(F);
+  _wspr.setBfoFrequency(F);
 }
 
 

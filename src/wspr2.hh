@@ -44,6 +44,9 @@ public:
     _N_rx = 0; _state = STATE_WAIT;
   }
 
+  inline double bfoFrequency() const { return _Fbfo; }
+  inline void setBfoFrequency(double F) { _Fbfo = F; }
+
   /** Blocks until all running decoding threads are finished. */
   void join();
 

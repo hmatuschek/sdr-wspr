@@ -18,10 +18,19 @@ class Input: public QObject
   Q_OBJECT
 
 public:
-  explicit Input(QObject *parent=0);
+  explicit Input(double F, double Fbfo, QObject *parent=0);
 
   virtual QWidget *createView() = 0;
   virtual sdr::Source *source() = 0;
+
+  virtual double frequency() const;
+  virtual void setFrequency(double F);
+  virtual double bfoFrequency() const;
+  virtual void setBfoFrequency(double F);
+
+protected:
+  double _F;
+  double _Fbfo;
 };
 
 
@@ -51,15 +60,17 @@ signals:
   void frequencyCorrectionChanged(double F);
 
 protected:
-  double _F;
-  double _Fbfo;
+  double _Fif;
   double _Fcorr;
 
   sdr::RTLSource *_src;
   sdr::AutoCast< std::complex<int16_t> > _cast;
   sdr::IQBaseBand<int16_t> _baseband;
   sdr::USBDemod<int16_t> _demod;
+
   sdr::Queue &_queue;
+
+  QWidget *_view;
 };
 
 
@@ -71,20 +82,14 @@ public:
   explicit RTLInputView(RTLInput *input, QWidget *parent=0);
 
 protected slots:
-  void onBandSelected(int idx);
-  void onRXFreqChanged(double F);
   void onRXFreqCorrChanged(double F);
   void onFreqCorrEdited();
   void onSrcAGCToggled(bool enabled);
 
 protected:
   RTLInput *_input;
-  QComboBox *_band;
-  QLineEdit *_freq;
   QLineEdit *_Fcorr;
-  QLineEdit *_Fbfo;
   QCheckBox *_rtl_agc;
-
 };
 
 class AudioInput: public Input
@@ -92,7 +97,7 @@ class AudioInput: public Input
   Q_OBJECT
 
 public:
-  explicit AudioInput(QObject *parent=0);
+  explicit AudioInput(double F, double Fbfo, QObject *parent=0);
   virtual ~AudioInput();
 
   QWidget *createView();
@@ -100,6 +105,7 @@ public:
 
 protected:
   sdr::PortSource<int16_t> _src;
+  QWidget *_view;
 };
 
 

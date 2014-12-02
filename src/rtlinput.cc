@@ -9,10 +9,30 @@ using namespace sdr;
 /* ********************************************************************************************* *
  * Implementation of Input
  * ********************************************************************************************* */
-Input::Input(QObject *parent)
-  : QObject(parent)
+Input::Input(double F, double Fbfo, QObject *parent)
+  : QObject(parent), _F(F), _Fbfo(Fbfo)
 {
   // pass...
+}
+
+double
+Input::frequency() const {
+  return _F;
+}
+
+void
+Input::setFrequency(double F) {
+  _F = F;
+}
+
+double
+Input::bfoFrequency() const {
+  return _Fbfo;
+}
+
+void
+Input::setBfoFrequency(double F) {
+  _Fbfo = F;
 }
 
 
@@ -20,11 +40,12 @@ Input::Input(QObject *parent)
  * Implementation of RTLInput
  * ********************************************************************************************* */
 RTLInput::RTLInput(double F, double Fbfo, QObject *parent)
-  : Input(parent), _F(F), _Fbfo(Fbfo), _Fcorr(0), _src(0), _cast(),
-    _baseband(0, _Fbfo, 800, 31, 1 , 12e3), _demod(), _queue(Queue::get())
+  : Input(F, Fbfo, parent), _Fif(100e6), _Fcorr(0), _src(0), _cast(),
+    _baseband(0, _Fbfo, 800, 31, 1 , 12e3), _demod(), _queue(Queue::get()), _view(0)
 {
   try {
-    _src = new RTLSource(_F-_Fbfo, 240000);
+    std::cerr << "Tune to " << int(_Fif+_F+_Fcorr-_Fbfo) << "Hz" << std::endl;
+    _src = new RTLSource(_Fif+_F+_Fcorr-_Fbfo, 240000);
     _src->connect(&_cast, true);
     _queue.addStart(_src, &RTLSource::start);
     _queue.addStop(_src, &RTLSource::stop);
@@ -38,12 +59,18 @@ RTLInput::RTLInput(double F, double Fbfo, QObject *parent)
 }
 
 RTLInput::~RTLInput() {
-  if (_src) { delete _src; }
+  if (_src) {
+    _queue.remStart(_src);
+    _queue.remStop(_src);
+    delete _src;
+  }
+  if (_view) { _view->deleteLater(); }
 }
 
 QWidget *
 RTLInput::createView() {
-  return 0;
+  if (0 == _view) { _view = new RTLInputView(this); }
+  return _view;
 }
 
 sdr::Source *
@@ -61,7 +88,8 @@ void
 RTLInput::setFrequency(double F) {
   _F = F;
   if (_src ) {
-    _src->setFrequency(_F+_Fcorr-_Fbfo);
+    std::cerr << "Tune to " << int(_Fif+_F+_Fcorr-_Fbfo) << "Hz" << std::endl;
+    _src->setFrequency(_Fif+_F+_Fcorr-_Fbfo);
     emit frequencyChanged(_F);
   }
 }
@@ -75,7 +103,8 @@ void
 RTLInput::setFreqCorrection(double F) {
   _Fcorr = F;
   if (_src) {
-    _src->setFrequency(_F+_Fbfo+_Fcorr);
+    std::cerr << "Tune to " << int(_Fif+_F+_Fcorr-_Fbfo) << "Hz" << std::endl;
+    _src->setFrequency(_Fif+_F+_Fcorr-_Fbfo);
     emit frequencyCorrectionChanged(_Fcorr);
   }
 }
@@ -88,13 +117,8 @@ RTLInput::bfoFrequency() const {
 void
 RTLInput::setBfoFrequency(double F) {
   _Fbfo = F;
-  bool isRunning = _queue.isRunning();
-  if (isRunning) { _queue.stop(); _queue.wait(); }
-  if (_src) {
-    _src->setFrequency(_F+_Fcorr-_Fbfo);
-  }
+  _src->setFrequency(_Fif+_F+_Fcorr-_Fbfo);
   _baseband.setCenterFrequency(_Fbfo);
-  if (isRunning) { _queue.start(); }
 }
 
 bool
@@ -119,55 +143,20 @@ RTLInput::enableSourceAGC(bool enabled) {
 RTLInputView::RTLInputView(RTLInput *input, QWidget *parent)
   : QWidget(parent), _input(input)
 {
-  _band = new QComboBox();
-  _band->addItem("160m", 1836.6);
-  _band->addItem("80m", 3592.6);
-  _band->addItem("60m", 5287.2);
-  _band->addItem("40m", 7038.6);
-  _band->addItem("30m", 10138.7);
-  _band->addItem("20m", 14095.6);
-  _band->addItem("17m", 18104.6);
-  _band->addItem("15m", 21094.6);
-  _band->addItem("12m", 24924.6);
-  _band->addItem("10m", 28124.6);
-  _band->addItem("6m", 50293.00);
-  _band->addItem("2m", 144488.5);
-  _band->setCurrentIndex(0);
-
-  double F = _band->currentData().toDouble()*1000;
-  _input->setFrequency(F);
-
-  _freq = new QLineEdit(QString::number((_input->frequency()+_input->freqCorrection())/1e3));
-  _freq->setEnabled(false);
-
   _Fcorr = new QLineEdit(QString::number(_input->freqCorrection()));
   QDoubleValidator *fval = new QDoubleValidator();
   _Fcorr->setValidator(fval);
 
-  _Fbfo = new QLineEdit(QString::number(_input->bfoFrequency()));
-  _Fbfo->setEnabled(false);
-
   _rtl_agc = new QCheckBox();
   _rtl_agc->setChecked(_input->sourceAGCEnabled());
 
-  QGroupBox *rx_box = new QGroupBox("Receiver");
-  QFormLayout *rx_layout = new QFormLayout();
-  rx_layout->addRow("Band", _band);
-  rx_layout->addRow("Freq. (kHz)", _freq);
-  rx_layout->addRow("Freq. cor. (Hz)", _Fcorr);
-  rx_layout->addRow("BFO (Hz)", _Fbfo);
-  rx_layout->addRow("AGC", _rtl_agc);
-  rx_box->setLayout(rx_layout);
-}
+  QFormLayout *layout = new QFormLayout();
+  layout->addRow("Freq. cor. (Hz)", _Fcorr);
+  layout->addRow("AGC", _rtl_agc);
+  setLayout(layout);
 
-void
-RTLInputView::onBandSelected(int idx) {
-  _input->setFrequency(_band->itemData(idx).toDouble());
-}
-
-void
-RTLInputView::onRXFreqChanged(double F) {
-  _input->setFrequency(F);
+  QObject::connect(_Fcorr, SIGNAL(editingFinished()), this, SLOT(onFreqCorrEdited()));
+  QObject::connect(_rtl_agc, SIGNAL(toggled(bool)), this, SLOT(onSrcAGCToggled(bool)));
 }
 
 void
@@ -191,20 +180,21 @@ RTLInputView::onSrcAGCToggled(bool enabled) {
 /* ********************************************************************************************* *
  * Implementation of AudioInput
  * ********************************************************************************************* */
-AudioInput::AudioInput(QObject *parent)
-  : Input(parent), _src(12e3, 512)
+AudioInput::AudioInput(double F, double Fbfo, QObject *parent)
+  : Input(F, Fbfo, parent), _src(12e3, 512), _view(0)
 {
   sdr::Queue::get().addIdle(&_src, &PortSource<int16_t>::next);
 }
 
 AudioInput::~AudioInput() {
-  //pass...
+  sdr::Queue::get().remIdle(&_src);
+  if (_view) { _view->deleteLater(); }
 }
 
 QWidget *
 AudioInput::createView() {
-  QLabel *view = new QLabel("Nothing to set for Audio input.");
-  return view;
+  if (0 == _view) { _view = new QLabel("No Settings."); }
+  return _view;
 }
 
 sdr::Source *
