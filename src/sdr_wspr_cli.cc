@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
     Queue::get().addStart(rtl_source, &RTLSource::start);
     Queue::get().addStop(rtl_source, &RTLSource::stop);
   } else if ("audio" == type) {
-    audio_source = new PortSource<int16_t>(12e3, 512);
+    audio_source = new PortSource<int16_t>(12e3, 128);
     audio_source->connect(&wspr);
     Queue::get().addIdle(audio_source, &PortSource<int16_t>::next);
     wspr.startRX();

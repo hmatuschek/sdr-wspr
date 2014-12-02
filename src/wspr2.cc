@@ -91,7 +91,7 @@ WSPR2::process(const Buffer<int16_t> &buffer, bool allow_overwrite)
       _curr_avg=0; _avg_count=0; _N_fft++;
     }
 
-    // If 512 samples have been received -> update spectrum
+    // If 1024 samples have been received -> update spectrum
     if (1024 == _N_fft) {
       _N_fft = 0;
       // Compute FFT

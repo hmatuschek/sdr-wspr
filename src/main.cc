@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
   PortAudio::init();
 
   // Create nodes
-  Receiver rx(10.1387e6, 100e6);
+  Receiver rx(Receiver::AUDIO_SOURCE);
 
   QApplication app(argc, argv);
 

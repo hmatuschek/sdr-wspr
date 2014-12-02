@@ -7,7 +7,7 @@ using namespace sdr;
 
 
 WaterfallView::WaterfallView(Receiver *rx, QWidget *parent)
-  : gui::WaterFallView(rx->spectrum(), 256, gui::WaterFallView::BOTTOM_UP, parent), _rx(rx)
+  : gui::WaterFallView(rx->spectrum(), 512, gui::WaterFallView::BOTTOM_UP, parent), _rx(rx)
 {
   QObject::connect(this, SIGNAL(click(double)), this, SLOT(onClick(double)));
 }
@@ -40,7 +40,7 @@ WaterfallView::paintEvent(QPaintEvent *evt) {
 
 void
 WaterfallView::onClick(double dF) {
-  double Fc = _rx->freqCorrection();
-  Fc += dF;
-  _rx->setFreqCorrection(Fc);
+  //double Fc = _rx->freqCorrection();
+  //Fc += dF;
+  //_rx->setFreqCorrection(Fc);
 }

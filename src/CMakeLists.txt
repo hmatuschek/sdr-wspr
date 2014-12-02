@@ -1,7 +1,7 @@
 set(sdr_wspr_SOURCES main.cc wspr2.cc
-    waterfallview.cc receiver.cc rxctrlview.cc)
+    waterfallview.cc receiver.cc rxctrlview.cc rtlinput.cc)
 set(sdr_wspr_MOC_HEADERS
-    waterfallview.hh receiver.hh rxctrlview.hh)
+    waterfallview.hh receiver.hh rxctrlview.hh rtlinput.hh)
 qt5_wrap_cpp(sdr_wspr_MOC_SOURCES ${sdr_wspr_MOC_HEADERS})
 
 set(sdr_wspr_HEADERS ${sdr_wspr_MOC_HEADERS})

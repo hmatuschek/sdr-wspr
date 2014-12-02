@@ -3,22 +3,22 @@
 
 using namespace sdr;
 
-Receiver::Receiver(double F, double IF, QObject *parent)
-  : QObject(parent), _F(F), _Fcorr(0), _IF(IF), _Fbfo(1500),
-    _src(_F+_IF+_Fcorr, 240000), _cast(), _baseband(0, _Fbfo, 800, 31, 1, 12e3),
-    _demod(), _agc(), _wspr(_Fbfo), _audio(), _queue(Queue::get()), _monitor(true), _timer()
+Receiver::Receiver(SourceType type, QObject *parent)
+  : QObject(parent), _Fbfo(8e2), _sourceType(type), _source(0),
+    _agc(), _wspr(_Fbfo), _audio(), _queue(Queue::get()), _monitor(true), _timer()
 {
-  _src.connect(&_cast, true);
-  _cast.connect(&_baseband, true);
-  _baseband.connect(&_demod, true);
-  _demod.connect(&_agc);
+  switch (_sourceType) {
+  case AUDIO_SOURCE: _source = new AudioInput(); break;
+  case RTL_SOURCE: _source = new RTLInput(10.140e6, 8e2); break;
+  }
+
+  _source->source()->connect(&_agc, true);
   _agc.connect(&_wspr);
   if (_monitor) {
     _agc.connect(&_audio);
   }
-
-  _queue.addStart(&_src, &RTLSource::start);
-  _queue.addStop(&_src, &RTLSource::stop);
+  // disable AGC by default
+  _agc.enable(false);
 
   _queue.addStart(this, &Receiver::_onQueueStart);
   _queue.addStop(this, &Receiver::_onQueueStop);
@@ -28,8 +28,12 @@ Receiver::Receiver(double F, double IF, QObject *parent)
 
   _messages = new QStandardItemModel();
   _messages->setColumnCount(5);
-  QStringList headers; headers << "Time" << "Message" << "SNR" << "Frequency" << "Delay";
+  QStringList headers; headers << "Time" << "Callsign" << "Locator" << "Power" << "Distance"
+                               << "SNR" << "Frequency" << "Delay";
   _messages->setHorizontalHeaderLabels(headers);
+
+  // Register message handler
+  _wspr.addMsgReceived(this, &Receiver::_onMessagesReceived);
 }
 
 Receiver::~Receiver() {
@@ -46,64 +50,6 @@ Receiver::join() {
   _wspr.join();
 }
 
-double
-Receiver::frequency() const {
-  return _F;
-}
-
-void
-Receiver::setFrequency(double F) {
-  _F = F;
-  _src.setFrequency(_F+_IF+_Fcorr);
-  emit frequencyChanged(_F);
-}
-
-double
-Receiver::freqCorrection() const {
-  return _Fcorr;
-}
-
-void
-Receiver::setFreqCorrection(double F) {
-  _Fcorr = F;
-  _src.setFrequency(_F+_IF+_Fcorr);
-  emit frequencyCorrectionChanged(_Fcorr);
-}
-
-double
-Receiver::intermediateFrequency() const {
-  return _IF;
-}
-
-void
-Receiver::setIntermediateFrequency(double F) {
-  _IF = F;
-  _src.setFrequency(_F+_IF+_Fcorr);
-}
-
-double
-Receiver::bfoFrequency() const {
-  return _Fbfo;
-}
-
-void
-Receiver::setBfoFrequency(double F) {
-  _Fbfo = F;
-  bool isRunning = _queue.isRunning();
-  if (isRunning) { _queue.stop(); _queue.wait(); }
-  _baseband.setCenterFrequency(_Fbfo);
-  if (isRunning) { _queue.start(); }
-}
-
-bool
-Receiver::sourceAGCEnabled() const {
-  return _src.agcEnabled();
-}
-
-void
-Receiver::enableSourceAGC(bool enabled) {
-  _src.enableAGC(enabled);
-}
 
 bool
 Receiver::audioAGCEnabled() const {
@@ -136,6 +82,10 @@ Receiver::messages() {
   return _messages;
 }
 
+QWidget *
+Receiver::createSourceControl() {
+  return _source->createView();
+}
 
 void
 Receiver::_onQueueStart() {
@@ -173,13 +123,16 @@ Receiver::_onStartRX() {
 void
 Receiver::_onMessagesReceived() {
   while (_wspr.messages().size()) {
-    WSPRMessage msg = _wspr.messages().front(); _wspr.messages().pop_front();
+    WSPRMessage msg = _wspr.messages().front(); _wspr.messages().pop_front();    
     QList<QStandardItem *> row;
     row.append(new QStandardItem(QTime::currentTime().toString()));
-    row.append(new QStandardItem(QString(msg.msg)));
-    row.append(new QStandardItem(QString::number(msg.snr)));
-    row.append(new QStandardItem(QString::number( (_F + _Fcorr + msg.df)/1e3 )));
-    row.append(new QStandardItem(QString::number(msg.dt)));
-    _messages->appendRow(row);
+    row.append(new QStandardItem(QString(msg.callsign().c_str())));
+    row.append(new QStandardItem(QString(msg.locator().c_str())));
+    row.append(new QStandardItem(QString::number(msg.powerW(), 'g', 3)));
+    row.append(new QStandardItem(QString::number(loc_dist(msg.locator(), "JO62PK"), 'f', 0)));
+    row.append(new QStandardItem(QString::number(msg.snr, 'f', 1)));
+    row.append(new QStandardItem(QString::number(msg.df, 'f', 0)));
+    row.append(new QStandardItem(QString::number(msg.dt, 'f', 1)));
+    _messages->insertRow(0, row);
   }
 }
