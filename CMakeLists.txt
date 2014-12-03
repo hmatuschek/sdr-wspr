@@ -8,6 +8,7 @@ include(InstallHeadersWithDirectory)
 
 find_package(Qt5Core REQUIRED)
 find_package(Qt5Widgets REQUIRED)
+find_package(Qt5WebKitWidgets REQUIRED)
 
 find_package(FFTW REQUIRED)
 find_package(FFTWSingle REQUIRED)
@@ -21,7 +22,9 @@ ADD_DEFINITIONS(${Qt5Widgets_DEFINITIONS})
 INCLUDE_DIRECTORIES(${Qt5Core_INCLUDE_DIRS})
 INCLUDE_DIRECTORIES(${Qt5Declarative_INCLUDE_DIRS})
 INCLUDE_DIRECTORIES(${Qt5Widgets_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(${Qt5WebKitWidgets_INCLUDE_DIRS})
 INCLUDE_DIRECTORIES(${PORTAUDIO_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(${PROJECT_BINARY_DIR})
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/src)
 
 # If libsdr cannot be found, compile and link to libsdr shipped along

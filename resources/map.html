@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>WSPR local map</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <style>
+      html, body, #map-canvas {
+        height: 100%;
+        margin: 0px;
+        padding: 0px
+      }
+    </style>
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
+    <script>
+var map;
+var connections = {};
+var qth = null;
+
+function onSetQTH (lon, lat) {
+  // Center map at QTH
+  // add marker at QTH
+}
+
+function onAddConnection (callsign, lon, lat, snr) {
+  // Check if connection exists
+  // If connection exists, update SNR
+  // otherwise, add marker at location with label callsign
+  // Draw line from QTH to location
+}
+
+function initialize() {
+  // Create Map object
+  var mapOptions = {
+    zoom: 3,
+    center: new google.maps.LatLng(0, 0)
+  };
+  map = new google.maps.Map(document.getElementById('map-canvas'),
+                            mapOptions);
+
+  // Connect to signals of bridge
+  window.bridge.centerMap += onSetQTH;
+  window.bridge.addConnection += onAddConnection;
+}
+
+google.maps.event.addDomListener(window, 'load', initialize);
+    </script>
+  </head>
+
+  <body>
+    <div id="map-canvas"></div>
+  </body>
+</html>
