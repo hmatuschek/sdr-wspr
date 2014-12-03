@@ -61,7 +61,8 @@ MapView::onLoadFinished(bool success) {
 
 void
 MapView::onMessagesReceived(QModelIndex parent, int from, int to) {
-  for (int row=from; row<=to; row++) {
+
+  for (int row=0; row<_rx.messages()->rowCount(); row++) {
     addConnection(_rx.messages()->item(row, 1)->text(),
                   _rx.messages()->item(row, 2)->text(),
                   _rx.messages()->item(row, 5)->text().toDouble());

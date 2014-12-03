@@ -11,9 +11,11 @@ RXCtrlView::RXCtrlView(Receiver *rx, QWidget *parent)
   _input = new QComboBox();
   _input->addItem("Audio", Receiver::AUDIO_SOURCE);
   _input->addItem("RTL2832", Receiver::RTL_SOURCE);
+  _input->addItem("File", Receiver::FILE_SOURCE);
   switch (_rx->sourceType()) {
   case Receiver::AUDIO_SOURCE: _input->setCurrentIndex(0); break;
   case Receiver::RTL_SOURCE: _input->setCurrentIndex(1); break;
+  case Receiver::FILE_SOURCE: _input->setCurrentIndex(2); break;
   }
 
   _band = new QComboBox();

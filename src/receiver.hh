@@ -16,7 +16,7 @@ class Receiver : public QObject
 
 public:
   typedef enum {
-    RTL_SOURCE, AUDIO_SOURCE
+    RTL_SOURCE, AUDIO_SOURCE, FILE_SOURCE
   } SourceType;
 
 public:

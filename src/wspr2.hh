@@ -45,7 +45,9 @@ public:
   }
 
   inline double bfoFrequency() const { return _Fbfo; }
-  inline void setBfoFrequency(double F) { _Fbfo = F; }
+  inline void setBfoFrequency(double F) {
+    _Fbfo = F; _fshift.setFrequencyShift(-_Fbfo);
+  }
 
   /** Blocks until all running decoding threads are finished. */
   void join();

@@ -4,12 +4,13 @@
 using namespace sdr;
 
 Receiver::Receiver(SourceType type, const QString &qth, QObject *parent)
-  : QObject(parent), _Fbfo(8e2), _qth(qth), _sourceType(type), _source(0),
+  : QObject(parent), _Fbfo(15e2), _qth(qth), _sourceType(type), _source(0),
     _agc(), _wspr(_Fbfo), _audio(), _queue(Queue::get()), _monitor(true), _timer()
 {
   switch (_sourceType) {
-  case AUDIO_SOURCE: _source = new WsprAudioSource(10.1402e6, 8e2); break;
-  case RTL_SOURCE: _source = new WsprRtlSource(10.1402e6, 8e2); break;
+  case AUDIO_SOURCE: _source = new WsprAudioSource(10.1402e6, _Fbfo); break;
+  case RTL_SOURCE: _source = new WsprRtlSource(10.1402e6, _Fbfo); break;
+  case FILE_SOURCE: _source = new WsprFileSource(10.1402e6, _Fbfo); break;
   }
 
   _source->source()->connect(&_agc, true);
@@ -73,6 +74,7 @@ Receiver::setSourceType(SourceType type) {
   switch (_sourceType) {
   case AUDIO_SOURCE: _source = new WsprAudioSource(F, Fbfo); break;
   case RTL_SOURCE: _source = new WsprRtlSource(F, Fbfo); break;
+  case FILE_SOURCE: _source = new WsprFileSource(F, Fbfo); break;
   }
   // Connect source
   _source->source()->connect(&_agc, true);
@@ -97,7 +99,8 @@ Receiver::bfoFrequency() const {
 
 void
 Receiver::setBfoFrequency(double F) {
-  _Fbfo = F; _source->setBfoFrequency(F);
+  _Fbfo = F;
+  _source->setBfoFrequency(F);
   _wspr.setBfoFrequency(F);
 }
 
@@ -147,18 +150,22 @@ Receiver::createSourceControl() {
 void
 Receiver::_onQueueStart() {
   _wspr.stopRX();
-  QTime t = QTime::currentTime();
+  if ((AUDIO_SOURCE == _sourceType) || (RTL_SOURCE == _sourceType)) {
+    QTime t = QTime::currentTime();
 
-  // Compute seconds til next start
-  int sec = 60-t.second();
-  if (0 == (t.minute() % 2)) { sec += 60; }
+    // Compute seconds til next start
+    int sec = 60-t.second();
+    if (0 == (t.minute() % 2)) { sec += 60; }
 
-  LogMessage msg(LOG_DEBUG);
-  msg << "Wait for " << sec << " seconds.";
-  Logger::get().log(msg);
+    LogMessage msg(LOG_DEBUG);
+    msg << "Wait for " << sec << " seconds.";
+    Logger::get().log(msg);
 
-  // Start timer to trigger recording
-  _timer.start(sec*1000);
+    // Start timer to trigger recording
+    _timer.start(sec*1000);
+  } else {
+    _onStartRX();
+  }
 }
 
 void

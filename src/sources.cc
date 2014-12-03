@@ -2,6 +2,8 @@
 #include <QGroupBox>
 #include <QFormLayout>
 #include <QLabel>
+#include <QPushButton>
+#include <QFileDialog>
 
 
 using namespace sdr;
@@ -200,4 +202,76 @@ WsprAudioSource::createView() {
 sdr::Source *
 WsprAudioSource::source() {
   return &_src;
+}
+
+
+/* ********************************************************************************************* *
+ * Implementation of WsprFileSource
+ * ********************************************************************************************* */
+WsprFileSource::WsprFileSource(double F, double Fbfo, QObject *parent)
+  : WSPRSource(F, Fbfo, parent), _src(), _autocast(), _subsampler(12e3), _view(0)
+{
+  _src.connect(&_autocast);
+  _autocast.connect(&_subsampler, true);
+  sdr::Queue::get().addIdle(&_src, &WavSource::next);
+}
+
+WsprFileSource::~WsprFileSource() {
+  sdr::Queue::get().remIdle(&_src);
+}
+
+QWidget *
+WsprFileSource::createView() {
+  if (0 == _view) {
+    _view = new WsprFileSourceView(this);
+  }
+  return _view;
+}
+
+sdr::Source *
+WsprFileSource::source() {
+  return &_src;
+}
+
+bool
+WsprFileSource::openFile(const QString &filename) {
+  _src.open(filename.toStdString());
+  return _src.isOpen();
+}
+
+
+/* ********************************************************************************************* *
+ * Implementation of WsprFileSourceView
+ * ********************************************************************************************* */
+WsprFileSourceView::WsprFileSourceView(WsprFileSource *src, QWidget *parent)
+  : QWidget(parent), _source(src)
+{
+  _filename = new QLineEdit();
+  QPushButton *select = new QPushButton("...");
+  QHBoxLayout *hbox = new QHBoxLayout();
+  hbox->addWidget(_filename, 1);
+  hbox->addWidget(select, 0);
+
+  QFormLayout *layout = new QFormLayout();
+  layout->addRow("File", hbox);
+  setLayout(layout);
+
+  QObject::connect(select, SIGNAL(clicked()), this, SLOT(onSelectClicked()));
+  QObject::connect(_filename, SIGNAL(returnPressed()), this, SLOT(onFileSelected()));
+}
+
+void
+WsprFileSourceView::onSelectClicked() {
+  QString path = QFileDialog::getOpenFileName(0, "Select file", "", "Wave (*.wav)");
+  if ("" == path) { return; }
+  _filename->setText(path);
+  onFileSelected();
+}
+
+void
+WsprFileSourceView::onFileSelected() {
+  bool isRunning = sdr::Queue::get().isRunning();
+  if (isRunning) { sdr::Queue::get().stop(); sdr::Queue::get().wait(); }
+  _source->openFile(_filename->text());
+  if (isRunning) { sdr::Queue::get().start(); }
 }
