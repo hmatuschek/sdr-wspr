@@ -5,7 +5,7 @@
 #include <QTimer>
 #include <QStandardItemModel>
 
-#include "rtlinput.hh"
+#include "sources.hh"
 #include "portaudio.hh"
 #include "utils.hh"
 #include "wspr2.hh"
@@ -20,7 +20,7 @@ public:
   } SourceType;
 
 public:
-  explicit Receiver(SourceType type, QObject *parent = 0);
+  explicit Receiver(SourceType type, const QString &qth="AA00", QObject *parent = 0);
   virtual ~Receiver();
 
   sdr::gui::SpectrumProvider *spectrum();
@@ -46,6 +46,8 @@ public:
 
   QStandardItemModel *messages();
 
+  const QString &qth() const;
+
 signals:
   void messagesReceived();
 
@@ -60,9 +62,10 @@ protected slots:
 protected:
   /** BFO frequency. */
   double _Fbfo;
+  QString _qth;
 
   SourceType _sourceType;
-  Input *_source;
+  WSPRSource *_source;
 
   sdr::AGC<int16_t> _agc;
   sdr::WSPR2 _wspr;

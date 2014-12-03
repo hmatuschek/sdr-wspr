@@ -48,9 +48,6 @@ RXCtrlView::RXCtrlView(Receiver *rx, QWidget *parent)
   _monitor = new QCheckBox();
   _monitor->setChecked(_rx->monitorEnabled());
 
-  _log = new QTableView();
-  _log->setModel(_rx->messages());
-
   QGroupBox *cfg_box = new QGroupBox("Receiver Settings");
   QFormLayout *cfg_layout = new QFormLayout();
   cfg_layout->addRow("Band", _band);
@@ -66,13 +63,9 @@ RXCtrlView::RXCtrlView(Receiver *rx, QWidget *parent)
   _rx_layout->addWidget(_rx->createSourceControl());
   rx_box->setLayout(_rx_layout);
 
-  QHBoxLayout *layout1 = new QHBoxLayout();
-  layout1->addWidget(rx_box);
-  layout1->addWidget(cfg_box);
-
   QVBoxLayout *layout = new QVBoxLayout();
-  layout->addLayout(layout1);
-  layout->addWidget(_log);
+  layout->addWidget(rx_box);
+  layout->addWidget(cfg_box);
   this->setLayout(layout);
 
   QObject::connect(_input, SIGNAL(currentIndexChanged(int)), this, SLOT(onSourceSelected(int)));

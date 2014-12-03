@@ -39,7 +39,6 @@ protected:
 
   QCheckBox *_audio_agc;
   QCheckBox *_monitor;
-  QTableView *_log;
 };
 
 #endif // RXCTRLVIEW_HH

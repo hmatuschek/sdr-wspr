@@ -3,13 +3,13 @@
 
 using namespace sdr;
 
-Receiver::Receiver(SourceType type, QObject *parent)
-  : QObject(parent), _Fbfo(8e2), _sourceType(type), _source(0),
+Receiver::Receiver(SourceType type, const QString &qth, QObject *parent)
+  : QObject(parent), _Fbfo(8e2), _qth(qth), _sourceType(type), _source(0),
     _agc(), _wspr(_Fbfo), _audio(), _queue(Queue::get()), _monitor(true), _timer()
 {
   switch (_sourceType) {
-  case AUDIO_SOURCE: _source = new AudioInput(10.1402e6, 8e2); break;
-  case RTL_SOURCE: _source = new RTLInput(10.1402e6, 8e2); break;
+  case AUDIO_SOURCE: _source = new WsprAudioSource(10.1402e6, 8e2); break;
+  case RTL_SOURCE: _source = new WsprRtlSource(10.1402e6, 8e2); break;
   }
 
   _source->source()->connect(&_agc, true);
@@ -71,8 +71,8 @@ Receiver::setSourceType(SourceType type) {
   // Create new source
   _sourceType = type;
   switch (_sourceType) {
-  case AUDIO_SOURCE: _source = new AudioInput(F, Fbfo); break;
-  case RTL_SOURCE: _source = new RTLInput(F, Fbfo); break;
+  case AUDIO_SOURCE: _source = new WsprAudioSource(F, Fbfo); break;
+  case RTL_SOURCE: _source = new WsprRtlSource(F, Fbfo); break;
   }
   // Connect source
   _source->source()->connect(&_agc, true);
@@ -123,14 +123,20 @@ Receiver::enableMonitor(bool enabled) {
   if (_monitor && !enabled) {
     // disconnect AGC & audio sink
     _agc.disconnect(&_audio);
-  } else if (!_monitor && enabled) {
+  } else if ( (!_monitor) && enabled) {
     _agc.connect(&_audio);
   }
+  _monitor = enabled;
 }
 
 QStandardItemModel *
 Receiver::messages() {
   return _messages;
+}
+
+const QString &
+Receiver::qth() const {
+  return _qth;
 }
 
 QWidget *
@@ -180,7 +186,7 @@ Receiver::_onMessagesReceived() {
     row.append(new QStandardItem(QString(msg.callsign().c_str())));
     row.append(new QStandardItem(QString(msg.locator().c_str())));
     row.append(new QStandardItem(QString::number(msg.powerW(), 'g', 3)));
-    row.append(new QStandardItem(QString::number(loc_dist(msg.locator(), "JO62PK"), 'f', 0)));
+    row.append(new QStandardItem(QString::number(loc_dist(msg.locator(), _qth.toStdString()), 'f', 0)));
     row.append(new QStandardItem(QString::number(msg.snr, 'f', 1)));
     row.append(new QStandardItem(QString::number(msg.df, 'f', 0)));
     row.append(new QStandardItem(QString::number(msg.dt, 'f', 1)));

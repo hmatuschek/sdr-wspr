@@ -1,5 +1,5 @@
-#ifndef RTLINPUT_HH
-#define RTLINPUT_HH
+#ifndef SOURCES_HH
+#define SOURCES_HH
 
 #include <QObject>
 #include <QLineEdit>
@@ -13,12 +13,12 @@
 #include "portaudio.hh"
 
 
-class Input: public QObject
+class WSPRSource: public QObject
 {
   Q_OBJECT
 
 public:
-  explicit Input(double F, double Fbfo, QObject *parent=0);
+  explicit WSPRSource(double F, double Fbfo, QObject *parent=0);
 
   virtual QWidget *createView() = 0;
   virtual sdr::Source *source() = 0;
@@ -34,13 +34,13 @@ protected:
 };
 
 
-class RTLInput : public Input
+class WsprRtlSource : public WSPRSource
 {
   Q_OBJECT
 
 public:
-  explicit RTLInput(double F, double Fbfo, QObject *parent = 0);
-  virtual ~RTLInput();
+  explicit WsprRtlSource(double F, double Fbfo, QObject *parent = 0);
+  virtual ~WsprRtlSource();
 
   QWidget *createView();
   sdr::Source *source();
@@ -74,12 +74,12 @@ protected:
 };
 
 
-class RTLInputView: public QWidget
+class WsprRtlSourceView: public QWidget
 {
   Q_OBJECT
 
 public:
-  explicit RTLInputView(RTLInput *input, QWidget *parent=0);
+  explicit WsprRtlSourceView(WsprRtlSource *input, QWidget *parent=0);
 
 protected slots:
   void onRXFreqCorrChanged(double F);
@@ -87,18 +87,18 @@ protected slots:
   void onSrcAGCToggled(bool enabled);
 
 protected:
-  RTLInput *_input;
+  WsprRtlSource *_input;
   QLineEdit *_Fcorr;
   QCheckBox *_rtl_agc;
 };
 
-class AudioInput: public Input
+class WsprAudioSource: public WSPRSource
 {
   Q_OBJECT
 
 public:
-  explicit AudioInput(double F, double Fbfo, QObject *parent=0);
-  virtual ~AudioInput();
+  explicit WsprAudioSource(double F, double Fbfo, QObject *parent=0);
+  virtual ~WsprAudioSource();
 
   QWidget *createView();
   sdr::Source *source();
@@ -109,4 +109,4 @@ protected:
 };
 
 
-#endif // RTLINPUT_HH
+#endif // SOURCES_HH

@@ -177,3 +177,19 @@ sdr::loc_dist(const std::string &loc_a, const std::string &loc_b) {
   azdist_(locA, locB, &utch, &nAz, &nEl, &Dmiles, &Dkm, &nHotAz, &nHotABetter);
   return Dkm;
 }
+
+void
+sdr::loc2deg(const std::string &loc, float &lon, float &lat) {
+  char grid[6];
+  memcpy(grid, "      ", 6);
+  memcpy(grid, loc.c_str(), std::min(size_t(6), loc.length()));
+  grid2deg_(grid, &lon, &lat);
+}
+
+std::string
+sdr::deg2loc(float lon, float lat) {
+  char grid[6];
+  memcpy(grid, "      ", 6);
+  deg2grid_(&lon, &lat, grid);
+  return grid;
+}

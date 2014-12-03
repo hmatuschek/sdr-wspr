@@ -1,12 +1,15 @@
-#include "receiver.hh"
-#include "waterfallview.hh"
-
-#include <iostream>
-#include <csignal>
 
 #include <QApplication>
 #include <QMainWindow>
 #include <QSplitter>
+#include <QTabWidget>
+
+#include <csignal>
+
+#include "receiver.hh"
+#include "waterfallview.hh"
+#include "tableview.hh"
+#include "mapview.hh"
 #include "rxctrlview.hh"
 
 
@@ -22,17 +25,22 @@ int main(int argc, char *argv[])
   PortAudio::init();
 
   // Create nodes
-  Receiver rx(Receiver::AUDIO_SOURCE);
+  Receiver rx(Receiver::AUDIO_SOURCE, "JO62PK");
 
   QApplication app(argc, argv);
 
   QMainWindow *win = new QMainWindow();
   QSplitter *split = new QSplitter();
-  split->addWidget(new WaterfallView(&rx));
+  QTabWidget *tabs = new QTabWidget();
+  tabs->addTab(new WaterfallView(&rx), "Spectrum");
+  tabs->addTab(new TableView(rx), "Spots");
+  tabs->addTab(new MapView(rx), "Map");
+  split->addWidget(tabs);
   split->addWidget(new RXCtrlView(&rx));
 
   win->setCentralWidget(split);
   win->setMinimumSize(640,480);
+  win->setWindowTitle("SDR-WSPR");
   win->show();
 
   Queue::get().start();

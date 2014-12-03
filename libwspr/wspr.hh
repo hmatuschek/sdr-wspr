@@ -52,6 +52,8 @@ void azdist_(char *loc_a, char *loc_b,
              int *nDmiles, int *nDkm,
              int *nHotAz, int *nHotABetter);
 
+void grid2deg_(char *loc, float *lon, float *lat);
+void deg2grid_(float *lon, float *lat, char *loc);
 }
 
 
@@ -85,7 +87,8 @@ public:
 void wspr_decode(const Buffer<int16_t> &in, std::list<WSPRMessage> &msgs, double Fbfo=1.5e3);
 /** Computes the distance between the locators. */
 double loc_dist(const std::string &loc_a, const std::string &loc_b);
-
+void loc2deg(const std::string &loc, float &lon, float &lat);
+std::string deg2loc(float lon, float lat);
 }
 
 #endif // WSPR_HH
