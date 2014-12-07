@@ -119,7 +119,9 @@ WsprRtlSource::bfoFrequency() const {
 void
 WsprRtlSource::setBfoFrequency(double F) {
   _Fbfo = F;
-  _src->setFrequency(_Fif+_F+_Fcorr-_Fbfo);
+  if (_src) {
+    _src->setFrequency(_Fif+_F+_Fcorr-_Fbfo);
+  }
   _baseband.setCenterFrequency(_Fbfo);
 }
 
@@ -157,7 +159,7 @@ WsprRtlSourceView::WsprRtlSourceView(WsprRtlSource *input, QWidget *parent)
   layout->addRow("AGC", _rtl_agc);
   setLayout(layout);
 
-  QObject::connect(_Fcorr, SIGNAL(editingFinished()), this, SLOT(onFreqCorrEdited()));
+  QObject::connect(_Fcorr, SIGNAL(returnPressed()), this, SLOT(onFreqCorrEdited()));
   QObject::connect(_rtl_agc, SIGNAL(toggled(bool)), this, SLOT(onSrcAGCToggled(bool)));
 }
 
@@ -218,6 +220,7 @@ WsprFileSource::WsprFileSource(double F, double Fbfo, QObject *parent)
 
 WsprFileSource::~WsprFileSource() {
   sdr::Queue::get().remIdle(&_src);
+  if (_view) { _view->deleteLater(); }
 }
 
 QWidget *
