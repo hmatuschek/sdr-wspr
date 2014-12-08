@@ -1,0 +1,4 @@
+#! /usr/bin/dh-exec
+/usr/bin/sdr-wspr
+/usr/share/applications/sdr-wspr.desktop
+/usr/share/icons/sdr-wspr.svg

@@ -55,7 +55,7 @@ void
 MapView::onLoadFinished(bool success) {
   emit mapReady();
   float lon, lat;
-  sdr::loc2deg(_rx.qth().toStdString(), lon, lat);
+  sdr::loc2deg(_rx.locator().toStdString(), lon, lat);
   _bridge.emitSetQTH(-lon, lat);
 }
 

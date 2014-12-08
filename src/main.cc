@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
   PortAudio::init();
 
   // Create nodes
-  Receiver rx(Receiver::AUDIO_SOURCE, "JO62PK");
+  Receiver rx(Receiver::AUDIO_SOURCE);
 
   QApplication app(argc, argv);
 

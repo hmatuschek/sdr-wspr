@@ -18,6 +18,8 @@ RXCtrlView::RXCtrlView(Receiver *rx, QWidget *parent)
   case Receiver::FILE_SOURCE: _input->setCurrentIndex(2); break;
   }
 
+  _qth = new QLineEdit(_rx->locator());
+
   _band = new QComboBox();
   _band->addItem("160m", 1838.1);
   _band->addItem("80m", 3594.1);
@@ -57,6 +59,7 @@ RXCtrlView::RXCtrlView(Receiver *rx, QWidget *parent)
   cfg_layout->addRow("BFO (Hz)", _Fbfo);
   cfg_layout->addRow("Audio AGC", _audio_agc);
   cfg_layout->addRow("Monitor", _monitor);
+  cfg_layout->addRow("QTH", _qth);
   cfg_box->setLayout(cfg_layout);
 
   QGroupBox *rx_box = new QGroupBox("Source Settings");
@@ -71,6 +74,7 @@ RXCtrlView::RXCtrlView(Receiver *rx, QWidget *parent)
   this->setLayout(layout);
 
   QObject::connect(_input, SIGNAL(currentIndexChanged(int)), this, SLOT(onSourceSelected(int)));
+  QObject::connect(_qth, SIGNAL(returnPressed()), this, SLOT(onQTHChanged()));
   QObject::connect(_band, SIGNAL(currentIndexChanged(int)), this, SLOT(onBandSelected(int)));
   QObject::connect(_Fbfo, SIGNAL(editingFinished()), this, SLOT(onBfoFrequencyChanged()));
   QObject::connect(_audio_agc, SIGNAL(toggled(bool)), this, SLOT(onAudioAGCToggled(bool)));
@@ -83,6 +87,11 @@ RXCtrlView::onSourceSelected(int idx) {
   _rx->setSourceType(type);
   QWidget *widget = _rx->createSourceControl();
   _rx_layout->addWidget(widget);
+}
+
+void
+RXCtrlView::onQTHChanged() {
+  _rx->setLocator(_qth->text().simplified());
 }
 
 void
