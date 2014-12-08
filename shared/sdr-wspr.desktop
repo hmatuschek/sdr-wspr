@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=SDR WSPR	
+GenericName=WSPR Receiver
+Comment=A WSPR receiver application using libsdr.
+Exec=sdr-wspr
+Icon=/usr/share/icons/sdr-wspr.svg
+Type=Application
+Categories=Education;Teaching;
+Terminal=false
+Encoding=UTF-8
