@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QTimer>
 #include <QStandardItemModel>
+#include <QSettings>
 
 #include "sources.hh"
 #include "portaudio.hh"
@@ -20,7 +21,7 @@ public:
   } SourceType;
 
 public:
-  explicit Receiver(SourceType type, const QString &qth="AA00", QObject *parent = 0);
+  explicit Receiver(SourceType type, QObject *parent = 0);
   virtual ~Receiver();
 
   sdr::gui::SpectrumProvider *spectrum();
@@ -44,9 +45,10 @@ public:
   bool monitorEnabled() const;
   void enableMonitor(bool enabled);
 
-  QStandardItemModel *messages();
+  QString locator() const;
+  void setLocator(const QString &loc);
 
-  const QString &qth() const;
+  QStandardItemModel *messages();
 
 signals:
   void messagesReceived();
@@ -75,6 +77,9 @@ protected:
 
   QStandardItemModel *_messages;
   QTimer _timer;
+
+  /** Persistent settings. */
+  QSettings _settings;
 };
 
 #endif // RECEIVER_HH

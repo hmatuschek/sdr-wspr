@@ -3,9 +3,10 @@
 
 using namespace sdr;
 
-Receiver::Receiver(SourceType type, const QString &qth, QObject *parent)
-  : QObject(parent), _Fbfo(15e2), _qth(qth), _sourceType(type), _source(0),
-    _agc(), _wspr(_Fbfo), _audio(), _queue(Queue::get()), _monitor(true), _timer()
+Receiver::Receiver(SourceType type, QObject *parent)
+  : QObject(parent), _Fbfo(15e2), _sourceType(type), _source(0),
+    _agc(), _wspr(_Fbfo), _audio(), _queue(Queue::get()), _monitor(true), _timer(),
+    _settings("com.github.hmatuschek", "sdr-wspr")
 {
   switch (_sourceType) {
   case AUDIO_SOURCE: _source = new WsprAudioSource(10.1402e6, _Fbfo); break;
@@ -132,14 +133,19 @@ Receiver::enableMonitor(bool enabled) {
   _monitor = enabled;
 }
 
+QString
+Receiver::locator() const {
+  return _settings.value("locator", "JO62PK").toString();
+}
+
+void
+Receiver::setLocator(const QString &loc) {
+  _settings.setValue("locator", loc);
+}
+
 QStandardItemModel *
 Receiver::messages() {
   return _messages;
-}
-
-const QString &
-Receiver::qth() const {
-  return _qth;
 }
 
 QWidget *
