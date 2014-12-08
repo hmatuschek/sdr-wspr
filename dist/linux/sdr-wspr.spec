@@ -11,15 +11,15 @@ Source: sdr-wspr-%{version}.tar.gz
 URL: https://github.com/hmatuschek/sdr-wspr
 Version: %{version}
 Buildroot: /tmp/sdrwsprrpm
-BuildRequires: gcc-c++, cmake, portaudio-devel, fftw3-devel, rtl-sdr-devel, libsdr-devel
+BuildRequires: gcc-c++, gcc-fortran, cmake, portaudio-devel, fftw3-devel, rtl-sdr-devel, libsdr-devel
 Requires: portaudio, fftw3, rtl-sdr, libsdr
 %if 0%{?suse_version}
-BuildRequires: libqt5-qtbase-devel
-Requires: libqt5-qtbase 
+BuildRequires: libqt5-qtbase-devel, libQt5WebKit5-devel, libQt5WebKitWidgets-devel, alsa-devel
+Requires: libqt5-qtbase
 %endif
 %if 0%{?fedora}
-BuildRequires: qt5-qtbase-devel
-Requires: qt5-qtbase 
+BuildRequires: qt5-qtbase-devel, qt5-qtwebkit-devel
+Requires: qt5-qtbase, qt5-qtwebkit
 %endif
 
 %description

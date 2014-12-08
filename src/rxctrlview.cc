@@ -35,7 +35,7 @@ RXCtrlView::RXCtrlView(Receiver *rx, QWidget *parent)
   _band->addItem("2m", 144490.1);
   _band->setCurrentIndex(0);
 
-  double F = _band->currentData().toDouble()*1000;
+  double F = _band->itemData(0).toDouble()*1000;
   _rx->setFrequency(F);
 
   _freq = new QLineEdit(QString::number(_rx->frequency()/1e3));
