@@ -199,7 +199,7 @@ Receiver::_onMessagesReceived() {
     row.append(new QStandardItem(QString(msg.callsign().c_str())));
     row.append(new QStandardItem(QString(msg.locator().c_str())));
     row.append(new QStandardItem(QString::number(msg.powerW(), 'g', 3)));
-    row.append(new QStandardItem(QString::number(loc_dist(msg.locator(), _qth.toStdString()), 'f', 0)));
+    row.append(new QStandardItem(QString::number(loc_dist(msg.locator(), locator().toStdString()), 'f', 0)));
     row.append(new QStandardItem(QString::number(msg.snr, 'f', 1)));
     row.append(new QStandardItem(QString::number(msg.df, 'f', 0)));
     row.append(new QStandardItem(QString::number(msg.dt, 'f', 1)));

@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
   split->addWidget(new RXCtrlView(&rx));
 
   win->setCentralWidget(split);
-  win->setMinimumSize(640,480);
+  win->setMinimumSize(640,512);
   win->setWindowTitle("SDR-WSPR");
   win->show();
 
