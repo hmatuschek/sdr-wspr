@@ -7,6 +7,7 @@
 #include <QCheckBox>
 #include <QTableView>
 #include <QVBoxLayout>
+#include <QPushButton>
 
 #include "receiver.hh"
 
@@ -19,6 +20,8 @@ public:
   explicit RXCtrlView(Receiver *rx, QWidget *parent = 0);
 
 protected slots:
+  void onStartStopToggled(bool enabled);
+
   void onSourceSelected(int idx);
   void onQTHChanged();
   void onBandSelected(int idx);
@@ -29,8 +32,13 @@ protected slots:
   void onMonitorToggled(bool enabled);
 
 protected:
+  void onQueueStart();
+  void onQueueStop();
+
+protected:
   Receiver *_rx;
 
+  QPushButton *_startStop;
   QVBoxLayout *_rx_layout;
   QComboBox *_input;
 

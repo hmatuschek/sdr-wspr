@@ -8,6 +8,18 @@
 RXCtrlView::RXCtrlView(Receiver *rx, QWidget *parent)
   : QWidget(parent), _rx(rx)
 {
+  _startStop = new QPushButton();
+  _startStop->setCheckable(true);
+  if (sdr::Queue::get().isRunning()) {
+    _startStop->setChecked(true);
+    _startStop->setText("Stop");
+  } else {
+    _startStop->setChecked(false);
+    _startStop->setText("Start");
+  }
+  sdr::Queue::get().addStart(this, &RXCtrlView::onQueueStart);
+  sdr::Queue::get().addStop(this, &RXCtrlView::onQueueStop);
+
   _input = new QComboBox();
   _input->addItem("Audio", Receiver::AUDIO_SOURCE);
   _input->addItem("RTL2832", Receiver::RTL_SOURCE);
@@ -69,6 +81,7 @@ RXCtrlView::RXCtrlView(Receiver *rx, QWidget *parent)
   rx_box->setLayout(_rx_layout);
 
   QVBoxLayout *layout = new QVBoxLayout();
+  layout->addWidget(_startStop);
   layout->addWidget(rx_box);
   layout->addWidget(cfg_box);
   this->setLayout(layout);
@@ -79,6 +92,19 @@ RXCtrlView::RXCtrlView(Receiver *rx, QWidget *parent)
   QObject::connect(_Fbfo, SIGNAL(editingFinished()), this, SLOT(onBfoFrequencyChanged()));
   QObject::connect(_audio_agc, SIGNAL(toggled(bool)), this, SLOT(onAudioAGCToggled(bool)));
   QObject::connect(_monitor, SIGNAL(toggled(bool)), this, SLOT(onMonitorToggled(bool)));
+  QObject::connect(_startStop, SIGNAL(toggled(bool)), this, SLOT(onStartStopToggled(bool)));
+}
+
+void
+RXCtrlView::onStartStopToggled(bool enabled) {
+  if (enabled) {
+    sdr::Queue::get().start();
+    _startStop->setText("Stop");
+  } else {
+    sdr::Queue::get().stop();
+    sdr::Queue::get().wait();
+    _startStop->setText("Start");
+  }
 }
 
 void
@@ -125,4 +151,16 @@ RXCtrlView::onAudioAGCToggled(bool enabled) {
 void
 RXCtrlView::onMonitorToggled(bool enabled) {
   _rx->enableMonitor(enabled);
+}
+
+void
+RXCtrlView::onQueueStart() {
+  _startStop->setChecked(true);
+  _startStop->setText("Stop");
+}
+
+void
+RXCtrlView::onQueueStop() {
+  _startStop->setChecked(false);
+  _startStop->setText("Start");
 }

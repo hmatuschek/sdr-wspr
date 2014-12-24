@@ -8,6 +8,10 @@ Receiver::Receiver(SourceType type, QObject *parent)
     _agc(), _wspr(_Fbfo), _audio(), _queue(Queue::get()), _monitor(true), _timer(),
     _settings("com.github.hmatuschek", "sdr-wspr")
 {
+  // Load BFO frequency from config
+  _Fbfo = _settings.value("Fbfo", 1.5e3).toDouble();
+  _wspr.setBfoFrequency(_Fbfo);
+
   switch (_sourceType) {
   case AUDIO_SOURCE: _source = new WsprAudioSource(10.1402e6, _Fbfo); break;
   case RTL_SOURCE: _source = new WsprRtlSource(10.1402e6, _Fbfo); break;
@@ -100,9 +104,12 @@ Receiver::bfoFrequency() const {
 
 void
 Receiver::setBfoFrequency(double F) {
+  // Update WSPR and source
   _Fbfo = F;
   _source->setBfoFrequency(F);
   _wspr.setBfoFrequency(F);
+  // Store BFO frequency in settings
+  _settings.setValue("Fbfo", _Fbfo);
 }
 
 
