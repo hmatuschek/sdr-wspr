@@ -10,17 +10,21 @@
 
 namespace sdr {
 
-/** @todo Implement spectrum provider. */
+/** Orchestrates the reception and decoding of WSPR messages. */
 class WSPR2: public Sink<int16_t>, public gui::SpectrumProvider
 {
 public:
+  /** Possible receiver states. */
   typedef enum {
-    STATE_RX,
-    STATE_WAIT
+    STATE_RX,   ///< Receiving.
+    STATE_WAIT  ///< Waiting for a 2 minute window.
   } State;
 
 public:
+  /** Constructor.
+   * @param Fbfo Specifies the BFO frequency. */
   WSPR2(double Fbfo=1.5e3);
+  /** Destructor. */
   virtual ~WSPR2();
 
   /** Implements the SpectrumProvider interface. */
@@ -44,7 +48,9 @@ public:
     _N_rx = 0; _state = STATE_WAIT;
   }
 
+  /** Returns the BFO frequency. */
   inline double bfoFrequency() const { return _Fbfo; }
+  /** Sets the BFO frequency. */
   inline void setBfoFrequency(double F) {
     _Fbfo = F; _fshift.setFrequencyShift(-_Fbfo);
   }
@@ -110,9 +116,11 @@ protected:
   std::list<WSPRMessage> _messages;
   /** Callbacks that get notified once a message has been received. */
   std::list<DelegateInterface *> _rx_evt;
-  /** Thread list mutex. */
+  /** Thread mutex. */
   pthread_mutex_t _threads_lock;
+  /** Thread count condition. */
   pthread_cond_t  _threads_cond;
+  /** Number of threads. */
   int _num_threads;
 };
 

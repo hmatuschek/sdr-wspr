@@ -169,12 +169,11 @@ WSPR2::decode_signal()
   wspr_decode(_work, _messages, _Fbfo);
 
   if (0 < _messages.size()) {
-    // Signal received messages
-    signalMessagesReceived();
-
     LogMessage msg(LOG_DEBUG);
     msg << "WSPR-2: Received " << _messages.size() << " messages.";
     Logger::get().log(msg);
+    // Signal received messages
+    signalMessagesReceived();
   } else {
     LogMessage msg(LOG_DEBUG);
     msg << "WSPR-2: Found nothing...";

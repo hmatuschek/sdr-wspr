@@ -26,7 +26,7 @@ signals:
 };
 
 
-/** A simple MapView using Google Maps. */
+/** A simple MapView using Google Maps displaying the locations of the received spots. */
 class MapView : public QWebView
 {
   Q_OBJECT

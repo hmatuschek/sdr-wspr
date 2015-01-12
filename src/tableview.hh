@@ -4,6 +4,7 @@
 #include <QTableView>
 #include "receiver.hh"
 
+/** Displays the received spots. */
 class TableView : public QTableView
 {
   Q_OBJECT
