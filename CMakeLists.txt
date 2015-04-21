@@ -11,7 +11,7 @@ find_package(Qt5Widgets REQUIRED)
 find_package(Qt5WebKitWidgets REQUIRED)
 
 find_package(FFTW REQUIRED)
-find_package(FFTWSingle REQUIRED)
+find_package(FFTWSingle)
 find_package(PortAudio REQUIRED)
 find_package(RTLSDR REQUIRED)
 

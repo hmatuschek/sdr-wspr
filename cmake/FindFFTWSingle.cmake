@@ -10,9 +10,9 @@ if (FFTWSingle_INCLUDES)
   set (FFTWSingle_FIND_QUIETLY TRUE)
 endif (FFTWSingle_INCLUDES)
 
-find_path (FFTWSingle_INCLUDES fftw3.h)
+find_path (FFTWSingle_INCLUDES fftw3.h HINTS ${FFTW_INCLUDE_HINT_PATH})
 
-find_library (FFTWSingle_LIBRARIES NAMES fftw3f)
+find_library (FFTWSingle_LIBRARIES NAMES fftw3f HINTS ${FFTW_LIB_HINT_PATH})
 
 # handle the QUIETLY and REQUIRED arguments and set FFTW_FOUND to TRUE if
 # all listed variables are TRUE
